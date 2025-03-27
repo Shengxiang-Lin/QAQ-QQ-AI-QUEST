@@ -1,7 +1,8 @@
+mod routes;
+mod handlers;
 use actix_web::{web, App, HttpServer};
-use crate::routes
 
-static const PORT: usize = 8080;
+const PORT: usize = 8080;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -9,7 +10,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
         .configure(routes::config)
     })
-    .bind("127.0.0.1:{}",PORT)?
+    .bind(format!("127.0.0.1:{}", PORT))?
     .run()
     .await
 }

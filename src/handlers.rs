@@ -1,39 +1,33 @@
-use actix_web::{get, post, web, HttpResponse, Responder};
+use actix_web::{get,post, web, HttpResponse, Responder};
+use QAQ::ll_one_bot::interface::*;
 
 
-
-{'self_id': 2603134759, 
-'user_id': 2421468125, 
-'time': 1743061547, 
-'message_id': 1922123618, 
-'message_seq': 11, 
-'message_type': 'private', 
-'sender': 
-{'user_id': 2421468125, 
-'nickname': 'Rhapsody', 
-'card': ''}, 
-'raw_message': '111', 
-'font': 14, 
-'sub_type': 'friend', 
-'message': [{'type': 'text', 'data': {'text': '111'}}], 
-'message_format': 'array', 
-'post_type': 'message'}
-127.0.0.1 - - [27/Mar/2025 15:45:46] "POST / HTTP/1.1" 200 -
-
-
-{'self_id': 2603134759, 
-'user_id': 2421468125, 
-'time': 1743061807, 
-'message_id': 1463962522, 'message_seq': 12, 'message_type': 'private',
-'sender': {'user_id': 2421468125, 'nickname': 'Rhapsody', 'card': ''}, 
-'raw_message': '[CQ:face,id=277]', 'font': 14, 'sub_type': 'friend', 
-'message': [{'type': 'face', 'data': {'id': '277'}}], 'message_format': 'array', 'post_type': 'message'}
-127.0.0.1 - - [27/Mar/2025 15:50:06] "POST / HTTP/1.1" 200 -
 
 #[post("/")]
 pub async fn show_info(
-  info
+    info: Result<web::Json<LLOneBotMessage>, actix_web::Error>, // 使用 Result 包装解析结果
 ) -> impl Responder {
-  println!("Received info: {:?}", info);
-  //HttpResponse::Ok().json(info);
+    match info {
+        Ok(valid_info) => {
+            println!("123");
+            println!("Received info: {:?}", valid_info);
+            HttpResponse::Ok().json(valid_info) // 返回成功响应
+        }
+        Err(err) => {
+            println!("Failed to parse LLOneBotMessage: {:?}", err); // 打印错误信息
+            HttpResponse::BadRequest().body(format!("Invalid request body: {}", err)) // 返回 400 错误
+        }
+    }
+}
+
+#[get("/info")]
+pub async fn send_info(
+) -> impl Responder {
+  println!("123");
+  let res=SenderInfo{
+    user_id: 123,
+    nickname: "nickname123".to_string(),
+    card: "card123".to_string(),
+  };
+  HttpResponse::Ok().json(res)
 }
