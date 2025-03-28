@@ -1,5 +1,5 @@
 use actix_web::HttpMessage;
-use awc::Client;
+use reqwest::Client;
 use once_cell::sync::Lazy;
 use serde_json::json;
 use crate::{config::config, llm_api::interface::Response};
@@ -11,22 +11,22 @@ pub struct ClientManager{
 }
 
 impl ClientManager{
-  pub fn new(url: String)->Self{
-    Self{
-      client: Client::default(),
-      url,
+  pub fn new(url: String) -> Self {
+    Self {
+        client: Client::new(),
+        url,
     }
-  }
+}
 
   pub async fn send_post(&self, payload: impl serde::Serialize) -> Result<Response, Box<dyn std::error::Error>>{
     let mut res = self.client.post(&self.url)
-      .insert_header(("Content-Type", "application/json")) 
-      .insert_header(("Authorization", "Bearer ".to_string() + &config::KEY)) 
-      .insert_header(("Accept", "application/json"))
-      .send_json(&json!(payload))
+      .header("Content-Type", "application/json") 
+      .header("Authorization", "Bearer ".to_string() + &config::KEY) 
+      .header("Accept", "application/json")
+      .json(&json!(payload))
+      .send()
       .await?;
-    let body = res.body().await?;
-    let response: Response = serde_json::from_slice(&body)?;
+    let response = res.json::<Response>().await?;
     
     println!("Response: {:?}", response);
     Ok(response)
