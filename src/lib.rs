@@ -106,6 +106,12 @@ pub mod llm_api{
     pub struct PromptTokensDetails{
       cached_tokens: u64,
     }
+
+    impl Response{
+      pub fn get_content(&self)->String{
+        self.choices[0].message.content.clone()
+      }
+    }
   }
 }
 

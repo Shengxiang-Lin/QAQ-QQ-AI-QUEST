@@ -1,16 +1,18 @@
 use serde::{Serialize, Deserialize};
+use crate::llm_api::interface::Response;
+
 
 #[derive(Serialize,Deserialize, Debug)]
 pub struct SenderInfo{
-  pub user_id: u64,
-  pub nickname: String,
-  pub card: String,
+  user_id: u64,
+  nickname: String,
+  card: String,
 }
 
 #[derive(Serialize,Deserialize,Debug)]
 pub struct QQMessage{
-  pub r#type : String,
-  pub data: MessageData
+  r#type : String,
+  data: MessageData
 }
 
 #[derive(Serialize,Deserialize,Debug)]
@@ -22,19 +24,48 @@ pub enum MessageData{
 
 #[derive(Serialize,Deserialize,Debug)]
 pub struct LLOneBotMessage{
-  pub self_id: u64,
-  pub user_id: u64,
-  pub time: u64,
-  pub message_id: u64,
-  pub message_seq: u64,
-  pub message_type: String, // private/group
-  pub sender: SenderInfo,
-  pub raw_message: String,
-  pub font: u8,
-  pub sub_type: String,
-  pub message: Vec<QQMessage>,
-  pub message_format: String,
-  pub post_type: String,
+  self_id: u64,
+  user_id: u64,
+  time: u64,
+  message_id: u64,
+  message_seq: u64,
+  message_type: String, // private/group
+  sender: SenderInfo,
+  raw_message: String,
+  font: u8,
+  sub_type: String,
+  message: Vec<QQMessage>,
+  message_format: String,
+  post_type: String,
 }
 
+#[derive(Serialize,Deserialize,Debug)]
+pub struct SendBackMessage{
+  user_id: u64,
+  message: Vec<QQMessage>
+}
 
+impl From<&Response> for SendBackMessage{
+  fn from(response: &Response) -> Self{
+    let mut message = Vec::new();
+    // 这里需要加入表情支持
+    message.push(QQMessage { 
+      r#type: "text".to_string(), 
+      data:{
+        MessageData::Text{
+          text: response.get_content()
+        }
+      },
+    });
+    Self{
+      user_id: 0,
+      message,
+    }
+  }
+}
+
+impl SendBackMessage{
+  pub fn set_user_id(&mut self, user_id: u64){
+    self.user_id = user_id;
+  }
+} 

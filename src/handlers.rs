@@ -1,6 +1,5 @@
 use actix_web::{get,post, web, HttpResponse, Responder};
 use crate::ll_one_bot::interface::*;
-use crate::services::CLIENT_MANAGER;
 
 #[post("/")]
 pub async fn show_info(
