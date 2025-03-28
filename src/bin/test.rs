@@ -5,7 +5,7 @@ use tokio::task::LocalSet;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 创建 ClientManager 实例
-    let local = LocalSet::new();
+    let local = LocalSet::new(); // 奇怪报错spawn_local called from outside of a task::LocalSet or LocalRuntime的解决方法
     local.run_until(async{
         let client_manager = ClientManager::new("https://api.deepseek.com/chat/completions".to_string());
 

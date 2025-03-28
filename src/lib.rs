@@ -1,46 +1,10 @@
 pub mod config;
 pub mod services;
+pub mod routes;
+pub mod handlers;
+
 pub mod ll_one_bot{
-  pub mod interface{
-    use serde::{Serialize, Deserialize};
-
-    #[derive(Serialize,Deserialize, Debug)]
-    pub struct SenderInfo{
-      pub user_id: u64,
-      pub nickname: String,
-      pub card: String,
-    }
-
-    #[derive(Serialize,Deserialize,Debug)]
-    pub struct QQMessage{
-      pub r#type : String,
-      pub data: MessageData
-    }
-    
-    #[derive(Serialize,Deserialize,Debug)]
-    #[serde(untagged)] // 使其反序列化时匹配内部类型而非枚举类型Text/Face
-    pub enum MessageData{
-      Text{text: String},
-      Face{id: String},
-    }
-
-    #[derive(Serialize,Deserialize,Debug)]
-    pub struct LLOneBotMessage{
-      pub self_id: u64,
-      pub user_id: u64,
-      pub time: u64,
-      pub message_id: u64,
-      pub message_seq: u64,
-      pub message_type: String, // private/group
-      pub sender: SenderInfo,
-      pub raw_message: String,
-      pub font: u8,
-      pub sub_type: String,
-      pub message: Vec<QQMessage>,
-      pub message_format: String,
-      pub post_type: String,
-    }
-  }
+  pub mod interface;
 }
 
 pub mod llm_api{
@@ -74,10 +38,10 @@ pub mod llm_api{
 
     #[derive(Serialize,Deserialize,Debug)]
     pub struct DeepSeek{
-      pub model: String,
-      pub messages: Vec<Message>,
-      pub presence_penalty: f32, // 介于-2 ~ 2之间，越大越容易转移话题
-      pub temperature: f32, // 介于0 ~ 2之间，越大越随机
+      model: String,
+      messages: Vec<Message>,
+      presence_penalty: f32, // 介于-2 ~ 2之间，越大越容易转移话题
+      temperature: f32, // 介于0 ~ 2之间，越大越随机
     }
 
     impl DeepSeek{
@@ -109,6 +73,39 @@ pub mod llm_api{
       }
     }
 
+    #[derive(Serialize,Deserialize,Debug)]
+    pub struct Response{
+      choices: Vec<Choice>,
+      created: u64,
+      id: String,
+      model: String,
+      object: String,
+      system_fingerprint: String,
+      usage: Usage,
+    }
+
+    #[derive(Serialize,Deserialize,Debug)]
+    pub struct Choice{
+      finish_reason: String,
+      index: u64,
+      logprobs: Option<serde_json::Value>,
+      message: Message,
+    }
+
+    #[derive(Serialize,Deserialize,Debug)]
+    pub struct Usage{
+      completion_tokens: u64,
+      prompt_cache_hit_tokens: u64,
+      prompt_cache_miss_tokens: u64,
+      prompt_tokens: u64,
+      prompt_tokens_details: PromptTokensDetails,
+      total_tokens: u64,
+    }
+
+    #[derive(Serialize,Deserialize,Debug)]
+    pub struct PromptTokensDetails{
+      cached_tokens: u64,
+    }
   }
 }
 

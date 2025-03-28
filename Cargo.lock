@@ -8,6 +8,7 @@ version = "0.1.0"
 dependencies = [
  "actix-web",
  "awc",
+ "once_cell",
  "serde",
  "serde_json",
  "tokio",

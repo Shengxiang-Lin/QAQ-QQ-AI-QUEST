@@ -1,6 +1,3 @@
-mod routes;
-mod handlers;
-
 use actix_web::{web, App, HttpServer};
 use QAQ::config::config;
 
