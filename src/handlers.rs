@@ -2,7 +2,6 @@ use actix_web::{get,post, web, HttpResponse, Responder};
 use QAQ::ll_one_bot::interface::*;
 
 
-
 #[post("/")]
 pub async fn show_info(
     info: Result<web::Json<LLOneBotMessage>, actix_web::Error>, // 使用 Result 包装解析结果
@@ -20,14 +19,3 @@ pub async fn show_info(
     }
 }
 
-#[get("/info")]
-pub async fn send_info(
-) -> impl Responder {
-  println!("123");
-  let res=SenderInfo{
-    user_id: 123,
-    nickname: "nickname123".to_string(),
-    card: "card123".to_string(),
-  };
-  HttpResponse::Ok().json(res)
-}
