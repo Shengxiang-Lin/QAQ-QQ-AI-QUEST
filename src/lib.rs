@@ -81,7 +81,7 @@ pub mod llm_api{
       model: String,
       object: String,
       system_fingerprint: String,
-      usage: Usage,
+      pub usage: Usage,
     }
 
     #[derive(Serialize,Deserialize,Debug)]
@@ -94,12 +94,12 @@ pub mod llm_api{
 
     #[derive(Serialize,Deserialize,Debug)]
     pub struct Usage{
-      completion_tokens: u64,
-      prompt_cache_hit_tokens: u64,
+      pub completion_tokens: u64,
+      pub prompt_cache_hit_tokens: u64,
       prompt_cache_miss_tokens: u64,
-      prompt_tokens: u64,
+      pub prompt_tokens: u64,
       prompt_tokens_details: PromptTokensDetails,
-      total_tokens: u64,
+      pub total_tokens: u64,
     }
 
     #[derive(Serialize,Deserialize,Debug)]

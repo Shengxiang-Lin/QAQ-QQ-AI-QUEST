@@ -4,5 +4,5 @@ pub mod config{
   pub const DEFAULT_PROMPT: &str = "
   你现在要伪装成一个QQ用户与你的好友聊天，要表现的自然且真实，不要太出戏。
   ";
-
+  pub const CONTEXT_LIMIT:usize = 10;
 }

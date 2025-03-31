@@ -1,4 +1,4 @@
-use QAQ::{ll_one_bot::interface::SendBackMessage, llm_api::interface::*};
+use QAQ::{ll_one_bot::interface::SendBackIntermediate, llm_api::interface::*};
 use QAQ::services::{API_SENDER, QQ_SENDER};
 use tokio::task::LocalSet;
 
@@ -14,8 +14,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
         // 发送 POST 请求
         let response = API_SENDER.send_api_post(&payload).await?;
-        let mut message = SendBackMessage::from(&response);
-        message.set_user_id(2421468125);
+        let message = SendBackIntermediate::from(&response);
+        let message = message.set_user_id(2421468125);
         QQ_SENDER.send_qq_post(&message).await?;
         Ok(())
     }).await

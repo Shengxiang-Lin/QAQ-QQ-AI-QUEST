@@ -12,7 +12,7 @@ pub struct SenderInfo{
 #[derive(Serialize,Deserialize,Debug)]
 pub struct QQMessage{
   r#type : String,
-  data: MessageData
+  pub data: MessageData
 }
 
 #[derive(Serialize,Deserialize,Debug)]
@@ -21,31 +21,99 @@ pub enum MessageData{
   Text{text: String},
   Face{id: String},
 }
-
+impl MessageData{
+  pub fn get_text(&self) -> String{
+    match self{
+      MessageData::Text{text} => text.clone(),
+      MessageData::Face{id} => id.clone(),
+    }
+  }
+}
 #[derive(Serialize,Deserialize,Debug)]
-pub struct LLOneBotMessage{
-  self_id: u64,
-  user_id: u64,
-  time: u64,
+pub struct LLOneBotPrivate{
+  pub self_id: u64,
+  pub user_id: u64,
+  pub time: u64,
   message_id: u64,
   message_seq: u64,
-  message_type: String, // private/group
+  message_type: String, // private
   sender: SenderInfo,
-  raw_message: String,
+  pub raw_message: String,
   font: u8,
-  sub_type: String,
+  sub_type: String, //friend、group、group_self、other
   message: Vec<QQMessage>,
-  message_format: String,
-  post_type: String,
 }
 
 #[derive(Serialize,Deserialize,Debug)]
-pub struct SendBackMessage{
+pub struct LLOneBotGroup{
+  pub self_id: u64,
+  pub user_id: u64,
+  pub group_id: u64,
+  pub time: u64, 
+  message_id: u64,
+  message_type: String, // group
+  sender: SenderInfo,
+  pub raw_message: String,
+  font: u8,
+  sub_type: String, //friend、group、group_self、other
+  message: Vec<QQMessage>,
+}
+
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+pub enum LLOneBot{
+  Private(LLOneBotPrivate),
+  Group(LLOneBotGroup),
+}
+
+
+#[derive(Serialize,Deserialize,Debug)]
+pub struct SendBackPrivate{
   user_id: u64,
+  pub message: Vec<QQMessage>
+}
+
+#[derive(Serialize,Deserialize,Debug)]
+pub struct SendBackGroup{
+  group_id: u64,
+  pub message: Vec<QQMessage>
+}
+
+#[derive(Serialize,Deserialize,Debug)]
+pub struct SendBackIntermediate{ // 用于中间转换
   message: Vec<QQMessage>
 }
 
-impl From<&Response> for SendBackMessage{
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+pub enum SendBack{
+  Private(SendBackPrivate),
+  Group(SendBackGroup),
+}
+
+impl SendBack{
+  pub fn get_content(&self) -> String{
+    match self{
+      SendBack::Private(sendback) => {
+        let mut content = String::new();
+        for message in &sendback.message {
+          content.push_str(&message.data.get_text());
+        }
+        return content;
+      },
+      SendBack::Group(sendback) => {
+        let mut content = String::new();
+        for message in &sendback.message {
+          content.push_str(&message.data.get_text());
+        }
+        return content;
+      },
+    }
+  }
+}
+
+impl From<&Response> for SendBackIntermediate{
   fn from(response: &Response) -> Self{
     let mut message = Vec::new();
     // 这里需要加入表情支持
@@ -58,14 +126,22 @@ impl From<&Response> for SendBackMessage{
       },
     });
     Self{
-      user_id: 0,
       message,
     }
   }
 }
 
-impl SendBackMessage{
-  pub fn set_user_id(&mut self, user_id: u64){
-    self.user_id = user_id;
+impl SendBackIntermediate{ // 中间件，用完即消失
+  pub fn set_user_id(self, user_id: u64) -> SendBack {
+    SendBack::Private(SendBackPrivate {
+      user_id,
+      message: self.message,
+    })
+  }
+  pub fn set_group_id(self, group_id: u64)-> SendBack{
+    SendBack::Group(SendBackGroup{
+      group_id,
+      message: self.message
+    })
   }
 } 
