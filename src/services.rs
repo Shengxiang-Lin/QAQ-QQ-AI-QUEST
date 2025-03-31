@@ -1,6 +1,4 @@
-use actix_web::HttpMessage;
 use reqwest::Client;
-use once_cell::sync::Lazy;
 use serde_json::json;
 use crate::{config::config, llm_api::interface::Response, ll_one_bot::interface::*};
 
@@ -47,10 +45,4 @@ impl ClientManager{
 }
 
 
-pub static API_SENDER: Lazy<ClientManager> = Lazy::new(|| {
-  ClientManager::new()
-});
 
-pub static QQ_SENDER: Lazy<ClientManager> = Lazy::new(|| {
-  ClientManager::new()
-});

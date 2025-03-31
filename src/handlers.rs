@@ -1,5 +1,5 @@
-use actix_web::{get,post, web, HttpResponse, Responder};
-use crate::ll_one_bot::interface::*;
+use actix_web::{post, web, HttpResponse, Responder};
+use crate::{ll_one_bot::interface::*, pipeline::handle_message_pipeline, QQ_SENDER};
 
 #[post("/")]
 pub async fn show_info(
@@ -8,12 +8,16 @@ pub async fn show_info(
     match info {
         Ok(valid_info) => {
             println!("Received info: {:?}", valid_info);
-            HttpResponse::Ok().json(valid_info) // 返回成功响应
+            let sendback = handle_message_pipeline(valid_info.into_inner()).await.unwrap();
+            QQ_SENDER.send_qq_post(&sendback).await.unwrap();
+            return HttpResponse::Ok().body("Success");
+             // 返回成功响应
         }
         Err(err) => {
             println!("Failed to parse LLOneBotPrivate: {:?}", err); // 打印错误信息
-            HttpResponse::BadRequest().body(format!("Invalid request body: {}", err)) // 返回 400 错误
+            return HttpResponse::BadRequest().body(format!("Invalid request body: {}", err)) // 返回 400 错误
         }
-    }
+    };
+    
 }
 

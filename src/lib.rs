@@ -2,6 +2,13 @@ pub mod config;
 pub mod services;
 pub mod routes;
 pub mod handlers;
+pub mod db;
+pub mod pipeline;
+
+use chrono::TimeZone;
+use chrono::{DateTime, Utc,FixedOffset};
+use once_cell::sync::Lazy;
+use once_cell::sync::OnceCell;
 
 pub mod ll_one_bot{
   pub mod interface;
@@ -68,9 +75,14 @@ pub mod llm_api{
         self.messages.insert(count, Message::new(ROLE::System, content));
       }
 
-      pub fn add_message(&mut self, role: ROLE, content: String){
-        self.messages.push(Message::new(role, content));
+      pub fn extend_message(&mut self, vec: Vec<Message>){
+        self.messages.extend(vec);
       }
+
+      pub fn add_message(&mut self, message: Message){
+        self.messages.push(message);
+      }
+      
     }
 
     #[derive(Serialize,Deserialize,Debug)]
@@ -115,3 +127,30 @@ pub mod llm_api{
   }
 }
 
+pub async fn initialize_database_manager() {
+  let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+  let db_manager = db::DatabaseManager::new(&database_url).await.expect("Failed to initialize DatabaseManager");
+  DATABASE_MANAGER.set(db_manager);
+}
+
+pub static DATABASE_MANAGER: OnceCell<db::DatabaseManager> = OnceCell::new();
+
+pub static API_SENDER: Lazy<services::ClientManager> = Lazy::new(|| {
+  services::ClientManager::new()
+});
+
+pub static QQ_SENDER: Lazy<services::ClientManager> = Lazy::new(|| {
+  services::ClientManager::new()
+});
+
+pub fn second2date(seconds: i64) -> String {
+    // 使用 Utc.timestamp_opt 替代 Utc.timestamp
+    let datetime_utc = Utc.timestamp_opt(seconds, 0).single().expect("Invalid timestamp");
+
+    // 转换为东八区时间
+    let offset = FixedOffset::east_opt(8 * 3600).expect("Invalid offset");
+    let datetime_east8 = datetime_utc.with_timezone(&offset);
+
+    // 格式化为字符串
+    datetime_east8.format("%Y-%m-%d %H:%M:%S").to_string()
+}

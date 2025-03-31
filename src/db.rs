@@ -1,9 +1,9 @@
-use sqlx::{Pool,Sqlite,SqlitePool};
+use sqlx::{SqlitePool,Row};
 use std::sync::Arc;
-use QAQ::config::config;
+use crate::config::config;
 use crate::ll_one_bot::interface::{LLOneBot,SendBack};
-use crate::llm_api::interface::Response;
-
+use crate::llm_api::interface::{ROLE,Response,Message};
+use crate::second2date;
 pub struct Database{
   pub pool: Arc<SqlitePool>,
 }
@@ -34,30 +34,45 @@ impl Database{
     time: u64, 
     raw_message: &str
   ) -> Result<(), sqlx::Error>{
-    sqlx::query!(r#"
+    
+    sqlx::query(r#"
       INSERT INTO message (self_id, user_id, group_id, time, raw_message)
       VALUES (?, ?, ?, ?, ?)
-      "#,self_id,user_id,group_id,time,raw_message)
+      ;"#)
+      .bind(self_id as i64)
+      .bind(user_id as i64)
+      .bind(group_id.map(|x| x as i64))
+      .bind(time as i64)
+      .bind(raw_message)
       .execute(&*self.pool)
       .await?;
     Ok(())
   } 
   
-  pub async fn insert_response(
+  pub async fn insert_response( //返回自增id
     &self, 
     self_id: u64,
     user_id: Option<u64>, 
     group_id: Option<u64>,
     raw_message: &str, 
     time: u64,
-  ) -> Result<(), sqlx::Error>{
-    sqlx::query!(r#"
-      INSERT INTO response (self_id, user_id, group_id, raw_message, time, token)
+  ) -> Result<u64, sqlx::Error>{
+    sqlx::query(r#"
+      INSERT INTO response (self_id, user_id, group_id, raw_message, time)
       VALUES (?, ?, ?, ?, ?)
-      "#,self_id,user_id,group_id,raw_message,time)
+      ;"#,)
+      .bind(self_id as i64)
+      .bind(user_id.map(|x| x as i64))
+      .bind(group_id.map(|x| x as i64))
+      .bind(raw_message)
+      .bind(time as i64)
       .execute(&*self.pool)
       .await?;
-    Ok(())
+
+    let row: (i64,) = sqlx::query_as("SELECT last_insert_rowid()")
+        .fetch_one(&*self.pool)
+        .await?;
+    Ok(row.0 as u64)
   }
 
 
@@ -69,10 +84,15 @@ impl Database{
     prompt_cache_hit_tokens: u64, 
     completion_tokens: u64
   ) -> Result<(), sqlx::Error>{
-    sqlx::query!(r#"
+    sqlx::query(r#"
       INSERT INTO usage_stats (response_id, total_tokens, prompt_tokens, prompt_cache_hit_tokens, completion_tokens)
       VALUES (?, ?, ?, ?, ?)
-      "#,response_id,total_tokens,prompt_tokens,prompt_cache_hit_tokens,completion_tokens)
+      ;"#)
+      .bind(response_id as i64)
+      .bind(total_tokens as i64)
+      .bind(prompt_tokens as i64)
+      .bind(prompt_cache_hit_tokens as i64)
+      .bind(completion_tokens as i64)
       .execute(&*self.pool)
       .await?;
     Ok(())
@@ -80,34 +100,35 @@ impl Database{
 
   // 返回<qq号，消息，时间>
   pub async fn get_private_context(&self, user_id: u64) -> Result<Vec<(u64, String, u64)>, sqlx::Error> {
-    let messages = sqlx::query!(
+    let messages = sqlx::query(
         r#"
         SELECT time, raw_message, user_id AS id
         FROM message
         WHERE user_id = ?
         LIMIT ?
-        "#,
-        user_id, config::CONTEXT_LIMIT)
+        ;"#)
+    .bind(user_id as i64)
+    .bind(config::CONTEXT_LIMIT as i32)
     .fetch_all(&*self.pool)
     .await?;
-    let responses = sqlx::query!(
+    let responses = sqlx::query(
       r#"
-      SELECT time, raw_message self_id AS id
+      SELECT time, raw_message, self_id AS id
       FROM response
       WHERE user_id = ?
       LIMIT ?
-      "#,
-      user_id,config::CONTEXT_LIMIT
-    )
+      ;"#)
+    .bind(user_id as i64)
+    .bind(config::CONTEXT_LIMIT as i32)
     .fetch_all(&*self.pool)
     .await?;
     let mut combined: Vec<(u64, String, u64)> = Vec::new();  
     for message in messages {
-      combined.push((message.id, message.raw_message, message.time));
+      combined.push((message.get("id"), message.get("raw_message"), message.get("time")));
     }
 
     for response in responses {
-      combined.push((response.id, response.raw_message, response.time));
+      combined.push((response.get("id"), response.get("raw_message"), response.get("time")));
     }
 
     combined.sort_by(|a, b| b.2.cmp(&a.2));
@@ -116,34 +137,36 @@ impl Database{
   }
 
   pub async fn get_group_context(&self, group_id: u64) -> Result<Vec<(u64, String, u64)>, sqlx::Error> {
-    let messages = sqlx::query!(
+    let messages = sqlx::query(
         r#"
         SELECT time, raw_message, user_id AS id
         FROM message
         WHERE group_id = ?
         LIMIT ?
-        "#,
-        group_id, config::CONTEXT_LIMIT)
+        ;"#)
+    .bind(group_id as i64)
+    .bind(config::CONTEXT_LIMIT as i32)
     .fetch_all(&*self.pool)
     .await?;
-    let responses = sqlx::query!(
+
+    let responses = sqlx::query(
       r#"
-      SELECT time, raw_message self_id AS id
+      SELECT time, raw_message, self_id AS uid
       FROM response
       WHERE group_id = ?
       LIMIT ?
-      "#,
-      group_id,config::CONTEXT_LIMIT
-    )
+      ;"#)
+    .bind(group_id as i64)
+    .bind(config::CONTEXT_LIMIT as i32)
     .fetch_all(&*self.pool)
     .await?;
     let mut combined: Vec<(u64, String, u64)> = Vec::new();  
     for message in messages {
-      combined.push((message.id, message.raw_message, message.time));
+      combined.push((message.get("id"), message.get("raw_message"), message.get("time")));
     }
 
     for response in responses {
-      combined.push((response.id, response.raw_message, response.time));
+      combined.push((response.get("id"), response.get("raw_message"), response.get("time")));
     }
 
     combined.sort_by(|a, b| b.2.cmp(&a.2));
@@ -168,13 +191,13 @@ impl DatabaseManager{
     })
   }
 
-  pub async fn insert_all(&self, message: &LLOneBot, response: &Response) -> Result<(), sqlx::Error>{
-    let id = self.insert_message_and_sendback(message, &response.into()).await?;
-    self.insert_token_usage(1, response).await?;
+  pub async fn insert_all(&self, message: &LLOneBot, response: &Response, sendback: &SendBack) -> Result<(), sqlx::Error>{
+    let id = self.insert_message_and_sendback(message, sendback).await?;
+    self.insert_token_usage(id, response).await?;
     Ok(())
   }
 
-  async fn insert_message_and_sendback(&self, message: &LLOneBot, response: &SendBack) ->Result<u64, sqlx::Error>{
+  async fn insert_message_and_sendback(&self, message: &LLOneBot, sendback: &SendBack) ->Result<u64, sqlx::Error>{
     match message{
       LLOneBot::Private(message) =>{
         self.db.insert_message(
@@ -183,7 +206,7 @@ impl DatabaseManager{
           None,
           message.time,
           message.raw_message.as_str()
-        )
+        ).await?;
       }
       LLOneBot::Group(message) =>{
         self.db.insert_message(
@@ -192,28 +215,28 @@ impl DatabaseManager{
           Some(message.group_id),
           message.time,
           message.raw_message.as_str()
-        )
+        ).await?;
       }
     }
     
-    let raw_message: &str = response.get_content().as_str();
-    let response_id = match response{
-      SendBack::Private(response) =>{
+    let raw_message: String = sendback.get_content();
+    let response_id = match sendback{
+      SendBack::Private(sendback) =>{
         self.db.insert_response(
-          message.self_id,
-          Some(response.user_id),
+          message.get_self_id(),
+          Some(sendback.user_id),
           None,
-          raw_message,
-          message.time,
+          raw_message.as_str(),
+          message.get_time(),
         ).await?
-      }
-      SendBack::Group(response) =>{
+      },
+      SendBack::Group(sendback) =>{
         self.db.insert_response(
-          message.self_id,
+          message.get_self_id(),
           None,
-          Some(response.group_id),
-          raw_message,
-          message.time,
+          Some(sendback.group_id),
+          raw_message.as_str(),
+          message.get_time(),
         ).await?
       }
     };
@@ -227,8 +250,43 @@ impl DatabaseManager{
       response.usage.prompt_tokens,
       response.usage.prompt_cache_hit_tokens,
       response.usage.completion_tokens
-      )
+      ).await?;
+      Ok(())
   }
+
+
+  pub async fn get_context(&self, message: &LLOneBot) -> Result<Vec<Message>, sqlx::Error>{
+    match message{
+      LLOneBot::Private(message) =>{
+        let context = self.db.get_private_context(message.user_id).await?;
+        let mut array = Vec::<Message>::new();
+        for i in context.iter().rev(){
+          let content = format!("QQ:{},time:{},message:{}", i.0,second2date(i.2 as i64),i.1);
+          if i.0 == message.user_id{
+            array.push(Message::new(ROLE::User, content));
+          }else{
+            array.push(Message::new(ROLE::Assistant, i.1.clone()));
+          }
+        }
+        Ok(array)
+      },
+
+      LLOneBot::Group(message) =>{
+        let context = self.db.get_group_context(message.group_id).await?;
+        let mut array = Vec::<Message>::new();
+        for i in context.iter().rev(){
+          let content = format!("QQ:{},time:{},message:{}", i.0,second2date(i.2 as i64),i.1);
+          if i.0 == message.user_id{
+            array.push(Message::new(ROLE::User, content));
+          }else{
+            array.push(Message::new(ROLE::Assistant, i.1.clone()));
+          }
+        }
+        Ok(array)
+      }
+    }
+  }
+
 }
 
 
@@ -241,7 +299,7 @@ CREATE TABLE IF NOT EXISTS message (
     user_id INTEGER NOT NULL,
     group_id INTEGER,
     time INTEGER NOT NULL,
-    raw_message TEXT NOT NULL,
+    raw_message TEXT NOT NULL
 );"#;
 
 static RESPONSE_TABLE : &str = r#"
@@ -251,7 +309,7 @@ CREATE TABLE IF NOT EXISTS response (
     user_id INTEGER,
     group_id INTEGER,
     raw_message TEXT NOT NULL,
-    time INTEGER NOT NULL,
+    time INTEGER NOT NULL
 );"#;
 
 static USAGE_TABLE : &str = r#"

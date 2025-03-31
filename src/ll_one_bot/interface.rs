@@ -67,16 +67,36 @@ pub enum LLOneBot{
   Group(LLOneBotGroup),
 }
 
+impl LLOneBot{
+  pub fn get_self_id(&self) -> u64{
+    match self{
+      LLOneBot::Private(message) => message.self_id,
+      LLOneBot::Group(message) => message.self_id,
+    }
+  }
+  pub fn get_time(&self) -> u64{
+    match self{
+      LLOneBot::Private(message) => message.time,
+      LLOneBot::Group(message) => message.time,
+    }
+  }
+  pub fn get_raw_message(&self) -> String{
+    match self{
+      LLOneBot::Private(message) => message.raw_message.clone(),
+      LLOneBot::Group(message) => message.raw_message.clone(),
+    }
+  }
+}
 
 #[derive(Serialize,Deserialize,Debug)]
 pub struct SendBackPrivate{
-  user_id: u64,
+  pub user_id: u64,
   pub message: Vec<QQMessage>
 }
 
 #[derive(Serialize,Deserialize,Debug)]
 pub struct SendBackGroup{
-  group_id: u64,
+  pub group_id: u64,
   pub message: Vec<QQMessage>
 }
 
