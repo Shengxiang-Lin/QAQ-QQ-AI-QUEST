@@ -53,7 +53,7 @@ fn postprecess_message(message:&LLOneBot, response: &Response) -> SendBack{
   let sendback = SendBackIntermediate::from(response);
   match message {
     LLOneBot::Private(message) => sendback.set_user_id(message.user_id),
-    LLOneBot::Group(message) => sendback.set_group_id(message.group_id),
+    LLOneBot::Group(message) => sendback.set_group_id(message.group_id, message.user_id),
 
   }
 

@@ -131,7 +131,7 @@ pub mod llm_api{
 pub async fn initialize_database_manager() {
   let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
   let db_manager = db::DatabaseManager::new(&database_url).await.expect("Failed to initialize DatabaseManager");
-  DATABASE_MANAGER.set(db_manager);
+  let _ = DATABASE_MANAGER.set(db_manager);
 }
 
 pub static DATABASE_MANAGER: OnceCell<db::DatabaseManager> = OnceCell::new();

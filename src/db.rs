@@ -282,14 +282,13 @@ impl DatabaseManager{
       SendBack::Group(sendback) =>{
         self.db.insert_response(
           message.get_self_id(),
-          None,
+          Some(sendback.user_id),
           Some(sendback.group_id),
           raw_message.as_str(),
           message.get_time(),
         ).await?
       }
     };
-    println!("{}",response_id);
     Ok(response_id)
   }
 

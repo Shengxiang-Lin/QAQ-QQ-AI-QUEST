@@ -99,6 +99,7 @@ pub struct SendBackPrivate{
 #[derive(Serialize,Deserialize,Debug)]
 pub struct SendBackGroup{
   pub group_id: u64,
+  pub user_id: u64,
   pub message: Vec<QQMessage>
 }
 
@@ -120,7 +121,7 @@ impl SendBack{
       SendBack::Private(sendback) => {
         let mut content = String::new();
         for message in &sendback.message {
-          match(&message.data){
+          match &message.data {
             MessageData::Text{text} => {content.push_str(text);},
             MessageData::Face{id} => {content.push_str(&format!("[CQ:face,id={}]",id));},
           }
@@ -129,13 +130,16 @@ impl SendBack{
       },
       SendBack::Group(sendback) => {
         let mut content = String::new();
-        println!("111111");
+        //println!("{}", sendback.user_id);
+        content.push_str(&format!("@{} ", sendback.user_id).as_str());
+        //println!("第一次拼接后: {:?}", content); 
         for message in &sendback.message {
-          match(&message.data){
+          match &message.data {
             MessageData::Text{text} => {content.push_str(text);},
             MessageData::Face{id} => {content.push_str(&format!("[CQ:face,id={}]",id));},
           }
         }
+        //println!("第二次拼接后: {:?}", content); 
         return content;
       },
     }
@@ -160,14 +164,14 @@ impl SendBackIntermediate{ // 中间件，用完即消失
       message: self.message,
     })
   }
-  pub fn set_group_id(self, group_id: u64)-> SendBack{
+  pub fn set_group_id(self, group_id: u64, user_id: u64)-> SendBack{
     SendBack::Group(SendBackGroup{
       group_id,
+      user_id,
       message: self.message
     })
   }
 } 
-
 
 pub fn extract_face(raw: String)->Vec<QQMessage>{
   use regex::Regex;
