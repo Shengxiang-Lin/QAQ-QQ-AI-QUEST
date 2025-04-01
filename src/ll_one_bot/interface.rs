@@ -11,7 +11,7 @@ pub struct SenderInfo{
 
 #[derive(Serialize,Deserialize,Debug)]
 pub struct QQMessage{
-  r#type : String,
+  pub r#type : String,
   pub data: MessageData
 }
 
@@ -63,8 +63,9 @@ pub struct LLOneBotGroup{
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(untagged)]
 pub enum LLOneBot{
-  Private(LLOneBotPrivate),
   Group(LLOneBotGroup),
+  Private(LLOneBotPrivate),
+  
 }
 
 impl LLOneBot{

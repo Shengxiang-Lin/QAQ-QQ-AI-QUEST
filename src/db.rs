@@ -174,6 +174,54 @@ impl Database{
     Ok(limited)
   }
 
+  pub async fn delete_private_message(&self, user_id: u64) -> Result<(), sqlx::Error> {
+    let (result1,result2) = tokio::join!(
+    sqlx::query(
+        r#"
+        DELETE FROM message
+        WHERE user_id = ?
+        ;"#)
+    .bind(user_id as i64)
+    .execute(&*self.pool),
+
+    sqlx::query(
+      r#"
+      DELETE FROM response
+      WHERE user_id = ?
+      ;"#)
+    .bind(user_id as i64)
+    .execute(&*self.pool)
+    );
+    result1?;
+    result2?;
+    Ok(())
+  }
+
+  pub async fn reset_all_table(&self)-> Result<(), sqlx::Error>{
+    let (result1,result2,result3) = tokio::join!(
+      sqlx::query(
+          r#"
+          DELETE FROM message
+          ;"#)
+      .execute(&*self.pool),
+
+      sqlx::query(
+        r#"
+        DELETE FROM response
+        ;"#)
+      .execute(&*self.pool),
+
+      sqlx::query(
+        r#"
+        DELETE FROM usage_stats
+        ;"#)
+      .execute(&*self.pool)
+      );
+      result1.unwrap();
+      result2.unwrap();
+      result3.unwrap();
+      Ok(())
+  }
 
 }
 
