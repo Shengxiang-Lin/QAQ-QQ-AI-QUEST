@@ -1,7 +1,7 @@
 #![allow(unused_imports)]
 #![allow(unused_variables)]
 use QAQ::{ll_one_bot::interface::*, llm_api::interface::*, db::Database};
-use QAQ::{API_SENDER, QQ_SENDER};
+use QAQ::{API_SENDER, DATABASE_MANAGER, QQ_SENDER,initialize_database_manager};
 use tokio::task::LocalSet;
 use dotenv::dotenv;
 use std::path::Path;
@@ -20,8 +20,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //     }]
     // });
     // QQ_SENDER.send_qq_post(&payload).await?;
-    let raw = "[CQ:face,id=68]你好[CQ:face,id=28],我是[CQ:face,id=98]，乐".to_string();
-    let result = extract_face(raw);
-    println!("{:?}",result);
+    initialize_database_manager().await;
+    let db = DATABASE_MANAGER.get().unwrap();
+    db.reset_all_table().await?;
     Ok(())
 }

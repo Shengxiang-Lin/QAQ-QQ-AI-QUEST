@@ -105,6 +105,7 @@ impl Database{
         SELECT time, raw_message, user_id AS id
         FROM message
         WHERE user_id = ?
+        ORDER BY time DESC
         LIMIT ?
         ;"#)
     .bind(user_id as i64)
@@ -116,6 +117,7 @@ impl Database{
       SELECT time, raw_message, self_id AS id
       FROM response
       WHERE user_id = ?
+      ORDER BY time DESC
       LIMIT ?
       ;"#)
     .bind(user_id as i64)
@@ -131,7 +133,7 @@ impl Database{
       combined.push((response.get("id"), response.get("raw_message"), response.get("time")));
     }
 
-    combined.sort_by(|a, b| b.2.cmp(&a.2));
+    combined.sort_by(|a, b| b.2.cmp(&a.2)); // 按时间倒序
     let limited = combined.into_iter().take(config::CONTEXT_LIMIT).collect();
     Ok(limited)
   }
@@ -335,6 +337,10 @@ impl DatabaseManager{
     }
   }
 
+  pub async fn reset_all_table(&self) -> Result<(), sqlx::Error>{
+    self.db.reset_all_table().await?;
+    Ok(())
+  }
 }
 
 

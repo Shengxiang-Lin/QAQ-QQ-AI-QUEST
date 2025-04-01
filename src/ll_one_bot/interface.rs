@@ -120,14 +120,20 @@ impl SendBack{
       SendBack::Private(sendback) => {
         let mut content = String::new();
         for message in &sendback.message {
-          content.push_str(&message.data.get_text());
+          match(&message.data){
+            MessageData::Text{text} => {content.push_str(text);},
+            MessageData::Face{id} => {content.push_str(&format!("[CQ:face,id={}]",id));},
+          }
         }
         return content;
       },
       SendBack::Group(sendback) => {
         let mut content = String::new();
         for message in &sendback.message {
-          content.push_str(&message.data.get_text());
+          match(&message.data){
+            MessageData::Text{text} => {content.push_str(text);},
+            MessageData::Face{id} => {content.push_str(&format!("[CQ:face,id={}]",id));},
+          }
         }
         return content;
       },
