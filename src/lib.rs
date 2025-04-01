@@ -55,6 +55,7 @@ pub mod llm_api{
       pub fn new(model: String, presence_penalty: Option<f32>, temperature: Option<f32>)->Self{
         let mut message = Vec::new();
         message.push(Message::new(ROLE::System, config::DEFAULT_PROMPT.to_string()));
+        message.push(Message::new(ROLE::System, config::FACE_ID_MAP.to_string()));
         Self{
           model,
           messages: message,

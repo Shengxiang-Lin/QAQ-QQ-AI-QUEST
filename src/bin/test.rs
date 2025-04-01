@@ -9,16 +9,19 @@ use std::path::Path;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
-    let payload = SendBack::Private(SendBackPrivate{
-        user_id: 2421468125,
-        message: vec![QQMessage{
-            r#type: "face".to_string(),
-            data: MessageData::Face{id: "28".to_string()}
-        },QQMessage{
-            r#type: "text".to_string(),
-            data: MessageData::Text{text: "lll".to_string()}
-        }]
-    });
-    QQ_SENDER.send_qq_post(&payload).await?;
+    // let payload = SendBack::Private(SendBackPrivate{
+    //     user_id: 2421468125,
+    //     message: vec![QQMessage{
+    //         r#type: "face".to_string(),
+    //         data: MessageData::Face{id: "28".to_string()}
+    //     },QQMessage{
+    //         r#type: "text".to_string(),
+    //         data: MessageData::Text{text: "lll".to_string()}
+    //     }]
+    // });
+    // QQ_SENDER.send_qq_post(&payload).await?;
+    let raw = "[CQ:face,id=68]你好[CQ:face,id=28],我是[CQ:face,id=98]，乐".to_string();
+    let result = extract_face(raw);
+    println!("{:?}",result);
     Ok(())
 }

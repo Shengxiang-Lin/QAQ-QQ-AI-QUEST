@@ -1,3 +1,4 @@
+use actix_web::cookie::time::ext;
 use serde::{Serialize, Deserialize};
 use crate::llm_api::interface::Response;
 
@@ -136,16 +137,9 @@ impl SendBack{
 
 impl From<&Response> for SendBackIntermediate{
   fn from(response: &Response) -> Self{
-    let mut message = Vec::new();
     // 这里需要加入表情支持
-    message.push(QQMessage { 
-      r#type: "text".to_string(), 
-      data:{
-        MessageData::Text{
-          text: response.get_content()
-        }
-      },
-    });
+    let raw_message = response.get_content();
+    let message = extract_face(raw_message);
     Self{
       message,
     }
@@ -166,3 +160,33 @@ impl SendBackIntermediate{ // 中间件，用完即消失
     })
   }
 } 
+
+
+pub fn extract_face(raw: String)->Vec<QQMessage>{
+  use regex::Regex;
+  let re = Regex::new(r"\[CQ:face,id=(\d+)\]").unwrap();
+  let mut parts = re.split(&raw)
+    .map(|s| QQMessage{
+      r#type: "text".to_string(),
+      data: MessageData::Text{
+        text: s.to_string()
+      }
+    })
+    .collect::<Vec<QQMessage>>();  
+
+  let mut index = 1;
+  // 遍历所有匹配项
+  for caps in re.captures_iter(&raw) {
+      if let Some(id_match) = caps.get(1) {
+          // 将捕获的 id 转换为 u64
+          parts.insert(index,QQMessage { 
+            r#type: "face".to_string(),
+            data: MessageData::Face{
+              id: id_match.as_str().to_string()
+            } 
+          });
+          index += 2;
+      }
+  };
+  parts
+}
