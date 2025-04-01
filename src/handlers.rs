@@ -1,6 +1,5 @@
 use actix_web::{post, web, HttpResponse, Responder};
 use crate::{ll_one_bot::interface::*, pipeline::handle_message_pipeline, QQ_SENDER};
-
 #[post("/")]
 pub async fn show_info(
     info: Result<web::Json<LLOneBot>, actix_web::Error>, // 使用 Result 包装解析结果
@@ -20,4 +19,3 @@ pub async fn show_info(
     };
     
 }
-

@@ -150,7 +150,6 @@ impl Database{
     .bind(config::CONTEXT_LIMIT as i32)
     .fetch_all(&*self.pool)
     .await?;
-
     let responses = sqlx::query(
       r#"
       SELECT time, raw_message, self_id AS uid
@@ -168,7 +167,7 @@ impl Database{
     }
 
     for response in responses {
-      combined.push((response.get("id"), response.get("raw_message"), response.get("time")));
+      combined.push((response.get("uid"), response.get("raw_message"), response.get("time")));
     }
 
     combined.sort_by(|a, b| b.2.cmp(&a.2));
@@ -290,6 +289,7 @@ impl DatabaseManager{
         ).await?
       }
     };
+    println!("{}",response_id);
     Ok(response_id)
   }
 

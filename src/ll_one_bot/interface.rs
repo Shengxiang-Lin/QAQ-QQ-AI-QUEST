@@ -129,6 +129,7 @@ impl SendBack{
       },
       SendBack::Group(sendback) => {
         let mut content = String::new();
+        println!("111111");
         for message in &sendback.message {
           match(&message.data){
             MessageData::Text{text} => {content.push_str(text);},
