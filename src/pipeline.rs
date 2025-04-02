@@ -29,6 +29,7 @@ async fn preprocess_message(message: &LLOneBot) -> DeepSeek {
   //处理消息，生成DeepSeek结构体
   let dbmanager = DATABASE_MANAGER.get().unwrap();
   let mut request = DeepSeek::new("deepseek-chat".to_string(), None, None);
+  request.add_self_config(message.get_self_id());// 增加AI关于自己的配置
   let context = dbmanager.get_context(message).await.unwrap();
   request.extend_message(context);
   request.add_message(Message::new(ROLE::User, message.get_raw_message()));
@@ -53,8 +54,7 @@ fn postprecess_message(message:&LLOneBot, response: &Response) -> SendBack{
   let sendback = SendBackIntermediate::from(response);
   match message {
     LLOneBot::Private(message) => sendback.set_user_id(message.user_id),
-    LLOneBot::Group(message) => sendback.set_group_id(message.group_id, message.user_id),
-
+    LLOneBot::Group(message) => sendback.set_group_id(message.group_id,message.user_id),
   }
 
 }

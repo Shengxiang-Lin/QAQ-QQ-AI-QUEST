@@ -1,4 +1,3 @@
-use actix_web::cookie::time::ext;
 use serde::{Serialize, Deserialize};
 use crate::llm_api::interface::Response;
 
@@ -21,12 +20,14 @@ pub struct QQMessage{
 pub enum MessageData{
   Text{text: String},
   Face{id: String},
+  At{qq:String,name:String},
 }
 impl MessageData{
   pub fn get_text(&self) -> String{
     match self{
       MessageData::Text{text} => text.clone(),
-      MessageData::Face{id} => id.clone(),
+      MessageData::Face{id} => format!("[CQ:face,id={}]",id),
+      MessageData::At { qq,name } => format!("[CQ:at,qq={},name={}]",qq,name),
     }
   }
 }
@@ -121,23 +122,16 @@ impl SendBack{
       SendBack::Private(sendback) => {
         let mut content = String::new();
         for message in &sendback.message {
-          match &message.data {
-            MessageData::Text{text} => {content.push_str(text);},
-            MessageData::Face{id} => {content.push_str(&format!("[CQ:face,id={}]",id));},
-          }
+          content.push_str(&message.data.get_text());
         }
         return content;
       },
       SendBack::Group(sendback) => {
         let mut content = String::new();
         //println!("{}", sendback.user_id);
-        content.push_str(&format!("@{} ", sendback.user_id).as_str());
         //println!("第一次拼接后: {:?}", content); 
         for message in &sendback.message {
-          match &message.data {
-            MessageData::Text{text} => {content.push_str(text);},
-            MessageData::Face{id} => {content.push_str(&format!("[CQ:face,id={}]",id));},
-          }
+          content.push_str(&message.data.get_text());
         }
         //println!("第二次拼接后: {:?}", content); 
         return content;
@@ -148,9 +142,9 @@ impl SendBack{
 
 impl From<&Response> for SendBackIntermediate{
   fn from(response: &Response) -> Self{
-    // 这里需要加入表情支持
+    // 已加入表情支持
     let raw_message = response.get_content();
-    let message = extract_face(raw_message);
+    let message = extract_cq(raw_message);
     Self{
       message,
     }
@@ -173,9 +167,9 @@ impl SendBackIntermediate{ // 中间件，用完即消失
   }
 } 
 
-pub fn extract_face(raw: String)->Vec<QQMessage>{
+pub fn extract_cq(raw: String)->Vec<QQMessage>{
   use regex::Regex;
-  let re = Regex::new(r"\[CQ:face,id=(\d+)\]").unwrap();
+  let re = Regex::new(r"\[CQ:(\w+),\w+?=(\d+).*?\]").unwrap();
   let mut parts = re.split(&raw)
     .map(|s| QQMessage{
       r#type: "text".to_string(),
@@ -188,16 +182,26 @@ pub fn extract_face(raw: String)->Vec<QQMessage>{
   let mut index = 1;
   // 遍历所有匹配项
   for caps in re.captures_iter(&raw) {
-      if let Some(id_match) = caps.get(1) {
-          // 将捕获的 id 转换为 u64
-          parts.insert(index,QQMessage { 
-            r#type: "face".to_string(),
-            data: MessageData::Face{
-              id: id_match.as_str().to_string()
-            } 
-          });
-          index += 2;
-      }
+      let cq_type = caps.get(1).unwrap().as_str();
+      let params = caps.get(2).unwrap().as_str();
+      let message = match cq_type {
+        "face" => QQMessage{
+          r#type: "face".to_string(),
+          data: MessageData::Face{
+            id: params.to_string()
+          }
+        },
+        "at" => QQMessage{
+          r#type: "at".to_string(),
+          data: MessageData::At{
+            qq: params.to_string(),
+            name: "".to_string()
+          }
+        },
+        _ => panic!("Unknown CQ type: {}", cq_type),
+      };
+      parts.insert(index, message);
+      index += 2;
   };
   parts
 }

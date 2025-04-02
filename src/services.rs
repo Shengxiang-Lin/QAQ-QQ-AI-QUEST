@@ -25,7 +25,7 @@ impl ClientManager{
       .await?;
     let response = res.json::<Response>().await?;
     
-    println!("Response: {:?}", response);
+    //println!("Response: {:?}", response);
     Ok(response)
   }
 
@@ -38,8 +38,6 @@ impl ClientManager{
     .json(&json!(payload))
     .send()
     .await?;
-    let response = res.text().await?;
-    println!("Response: {:?}", response);
     Ok(())
   }
 }

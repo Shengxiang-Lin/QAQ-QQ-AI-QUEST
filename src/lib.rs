@@ -83,6 +83,10 @@ pub mod llm_api{
       pub fn add_message(&mut self, message: Message){
         self.messages.push(message);
       }
+
+      pub fn add_self_config(&mut self, self_id: u64){
+        self.messages.push(Message::new(ROLE::System,format!("你的QQ号是:{},请观察用户是否@你的QQ",self_id) ));
+      }
       
     }
 

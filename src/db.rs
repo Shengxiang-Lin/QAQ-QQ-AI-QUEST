@@ -372,7 +372,6 @@ CREATE TABLE IF NOT EXISTS usage_stats (
     total_tokens INTEGER NOT NULL,
     prompt_tokens INTEGER NOT NULL,
     prompt_cache_hit_tokens INTEGER NOT NULL,
-    completion_tokens INTEGER NOT NULL,
-    FOREIGN KEY (response_id) REFERENCES response (id)
+    completion_tokens INTEGER NOT NULL
 );"#;
 
