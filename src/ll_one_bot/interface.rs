@@ -21,6 +21,7 @@ pub enum MessageData{
   Text{text: String},
   Face{id: String},
   At{qq:String,name:String},
+  Markdown{content: String},
 }
 impl MessageData{
   pub fn get_text(&self) -> String{
@@ -28,6 +29,7 @@ impl MessageData{
       MessageData::Text{text} => text.clone(),
       MessageData::Face{id} => format!("[CQ:face,id={}]",id),
       MessageData::At { qq,name } => format!("[CQ:at,qq={},name={}]",qq,name),
+      MessageData::Markdown{content} => content.clone(),
     }
   }
 }
@@ -167,38 +169,46 @@ impl SendBackIntermediate{ // 中间件，用完即消失
   }
 } 
 
-pub fn extract_cq(raw: String)->Vec<QQMessage>{
+pub fn extract_cq(raw: String) -> Vec<QQMessage> {
   use regex::Regex;
-  let re = Regex::new(r"\[CQ:(\w+),\w+?=(\d+).*?\]").unwrap();
+  // 修改正则表达式以支持markdown内容
+  let re = Regex::new(r"\[CQ:(\w+),\w+?=([^\]]+)\]").unwrap();
   let mut parts = re.split(&raw)
-    .map(|s| QQMessage{
-      r#type: "text".to_string(),
-      data: MessageData::Text{
-        text: s.to_string()
-      }
-    })
-    .collect::<Vec<QQMessage>>();  
+      .map(|s| QQMessage{
+          r#type: "text".to_string(),
+          data: MessageData::Text{
+              text: s.to_string()
+          }
+      })
+      .collect::<Vec<QQMessage>>();  
 
   let mut index = 1;
   // 遍历所有匹配项
   for caps in re.captures_iter(&raw) {
       let cq_type = caps.get(1).unwrap().as_str();
       let params = caps.get(2).unwrap().as_str();
+      println!("{:?}",cq_type);
       let message = match cq_type {
-        "face" => QQMessage{
-          r#type: "face".to_string(),
-          data: MessageData::Face{
-            id: params.to_string()
-          }
-        },
-        "at" => QQMessage{
-          r#type: "at".to_string(),
-          data: MessageData::At{
-            qq: params.to_string(),
-            name: "".to_string()
-          }
-        },
-        _ => panic!("Unknown CQ type: {}", cq_type),
+          "face" => QQMessage{
+              r#type: "face".to_string(),
+              data: MessageData::Face{
+                  id: params.to_string()
+              }
+          },
+          "at" => QQMessage{
+              r#type: "at".to_string(),
+              data: MessageData::At{
+                  qq: params.to_string(),
+                  name: "".to_string()
+              }
+          },
+          "markdown" => QQMessage{
+              r#type: "markdown".to_string(),
+              data: MessageData::Text{ 
+                  text: format!("[CQ:markdown,content={}]", params)
+              }
+          },
+          _ => panic!("Unknown CQ type: {}", cq_type),
       };
       parts.insert(index, message);
       index += 2;
