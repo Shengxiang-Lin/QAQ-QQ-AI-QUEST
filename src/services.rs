@@ -1,6 +1,6 @@
 use reqwest::Client;
 use serde_json::json;
-use crate::{config::config, llm_api::interface::Response, ll_one_bot::interface::*};
+use crate::{config, llm_api::interface::Response, ll_one_bot::interface::*};
 
 //同一二进制文件下使用crate，不同二进制文件下使用QAQ，因为都在lib.rs中声明了模块，故用crate
 pub struct ClientManager{
@@ -14,18 +14,21 @@ impl ClientManager{
     }
 }
 
-  pub async fn send_api_post(&self, payload: &impl serde::Serialize) -> Result<Response, Box<dyn std::error::Error>>{
-    let url = "https://api.deepseek.com/chat/completions".to_string();
+  pub async fn send_api_post(&self, url: &str, payload: &impl serde::Serialize) -> Result<Response, Box<dyn std::error::Error>>{
+    let key: &str = match url {
+      config::model_url::DEEPSEEK => config::config::KEY,
+      config::model_url::DOUBAO_VISION => config::config::DOUBAO_KEY,
+      _ => panic!("Invalid URL"),
+    };
     let res = self.client.post(url)
       .header("Content-Type", "application/json") 
-      .header("Authorization", "Bearer ".to_string() + &config::KEY) 
+      .header("Authorization", "Bearer ".to_string() + key) 
       .header("Accept", "application/json")
       .json(&json!(payload))
       .send()
       .await?;
     let response = res.json::<Response>().await?;
-    
-    //println!("Response: {:?}", response);
+    println!("Response: {:?}", response);
     Ok(response)
   }
 

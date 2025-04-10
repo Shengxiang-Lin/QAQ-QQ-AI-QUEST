@@ -297,7 +297,7 @@ impl DatabaseManager{
       id,
       response.usage.total_tokens,
       response.usage.prompt_tokens,
-      response.usage.prompt_cache_hit_tokens,
+      response.usage.prompt_tokens_details.cached_tokens,
       response.usage.completion_tokens
       ).await?;
       Ok(())
@@ -305,35 +305,25 @@ impl DatabaseManager{
 
 
   pub async fn get_context(&self, message: &LLOneBot) -> Result<Vec<Message>, sqlx::Error>{
-    match message{
+    let context = match message{
       LLOneBot::Private(message) =>{
-        let context = self.db.get_private_context(message.user_id).await?;
-        let mut array = Vec::<Message>::new();
-        for i in context.iter().rev(){
-          let content = format!("QQ:{},time:{},message:{}", i.0,second2date(i.2 as i64),i.1);
-          if i.0 == message.user_id{
-            array.push(Message::new(ROLE::User, content));
-          }else{
-            array.push(Message::new(ROLE::Assistant, i.1.clone()));
-          }
-        }
-        Ok(array)
+        self.db.get_private_context(message.user_id).await.unwrap()
       },
-
       LLOneBot::Group(message) =>{
-        let context = self.db.get_group_context(message.group_id).await?;
-        let mut array = Vec::<Message>::new();
-        for i in context.iter().rev(){
-          let content = format!("QQ:{},time:{},message:{}", i.0,second2date(i.2 as i64),i.1);
-          if i.0 == message.user_id{
-            array.push(Message::new(ROLE::User, content));
-          }else{
-            array.push(Message::new(ROLE::Assistant, i.1.clone()));
-          }
-        }
-        Ok(array)
+        self.db.get_group_context(message.group_id).await.unwrap()
+      }
+    };
+    let user_id = message.get_user_id();
+    let mut array = Vec::<Message>::new();
+    for i in context.iter().rev(){
+      let content = format!("QQ:{},time:{},message:{}", i.0,second2date(i.2 as i64),i.1);
+      if i.0 == user_id{
+        array.push(Message::new_text(ROLE::User, content));
+      }else{
+        array.push(Message::new_text(ROLE::Assistant, i.1.clone()));
       }
     }
+    Ok(array)
   }
 
   pub async fn reset_all_table(&self) -> Result<(), sqlx::Error>{

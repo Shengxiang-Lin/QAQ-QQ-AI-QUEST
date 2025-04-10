@@ -6,7 +6,7 @@ pub mod db;
 pub mod pipeline;
 
 use chrono::TimeZone;
-use chrono::{DateTime, Utc,FixedOffset};
+use chrono::{Utc,FixedOffset};
 use once_cell::sync::Lazy;
 use once_cell::sync::OnceCell;
 
@@ -19,6 +19,13 @@ pub mod llm_api{
     use serde::{Serialize, Deserialize};
     use crate::config::config;
 
+
+    pub trait LLM{
+      fn add_system_message(&mut self, content: String);
+      fn extend_message(&mut self, vec: Vec<Message>);
+
+    } 
+
     #[derive(Serialize,Deserialize,Debug,PartialEq)]
     #[serde(rename_all = "lowercase")] // 将枚举值序列化为小写字符串
     pub enum ROLE{
@@ -28,16 +35,37 @@ pub mod llm_api{
     }
 
     #[derive(Serialize,Deserialize,Debug)]
+    #[serde(rename_all = "lowercase")]
+    #[serde(untagged)]
+    pub enum MessageContent{
+      ImageUrl([ImageData;1]),
+      PlainText(String),
+    }
+
+    #[derive(Serialize, Deserialize, Debug)]
+    pub struct ImageData {
+        pub r#type: String,
+        pub image_url: String,
+    }
+
+    #[derive(Serialize,Deserialize,Debug)]
     pub struct Message{
       pub role: ROLE,
-      pub content: String,
+      pub content: MessageContent,
     }
 
     impl Message{
-      pub fn new(role: ROLE, content: String)->Self{
+      pub fn new(role: ROLE, content: MessageContent)->Self{
         Self{
           role,
           content,
+        }
+      }
+
+      pub fn new_text(role: ROLE, text: String)->Self{
+        Self{
+          role,
+          content: MessageContent::PlainText(text),
         }
       }
     }
@@ -54,8 +82,8 @@ pub mod llm_api{
     impl DeepSeek{
       pub fn new(model: String, presence_penalty: Option<f32>, temperature: Option<f32>)->Self{
         let mut message = Vec::new();
-        message.push(Message::new(ROLE::System, config::DEFAULT_PROMPT.to_string()));
-        message.push(Message::new(ROLE::System, config::FACE_ID_MAP.to_string()));
+        message.push(Message::new_text(ROLE::System, config::DEFAULT_PROMPT.to_string()));
+        message.push(Message::new_text(ROLE::System, config::FACE_ID_MAP.to_string()));
         Self{
           model,
           messages: message,
@@ -73,7 +101,7 @@ pub mod llm_api{
             break;
           }
         }
-        self.messages.insert(count, Message::new(ROLE::System, content));
+        self.messages.insert(count, Message::new_text(ROLE::System, content));
       }
 
       pub fn extend_message(&mut self, vec: Vec<Message>){
@@ -85,11 +113,26 @@ pub mod llm_api{
       }
 
       pub fn add_self_config(&mut self, self_id: u64){
-        self.messages.push(Message::new(ROLE::System,format!("你的QQ号是:{},请观察用户是否@你的QQ",self_id) ));
+        self.messages.push(Message::new_text(ROLE::System,format!("你的QQ号是:{},请观察用户是否@你的QQ",self_id) ));
       }
       
+      pub fn handle_special_input(&mut self){
+        // for message in self.messages.iter(){
+        //   if let MessageContent::PlainText(text) = &message.content {
+        //       //检查是否为multimedia.nt.qq.com.cn
+        //   }
+        // }
+      }
+
     }
 
+
+    #[derive(Serialize,Deserialize,Debug)]
+    pub struct DouBao{
+
+    }
+
+    // Response急需重构，太屎了
     #[derive(Serialize,Deserialize,Debug)]
     pub struct Response{
       choices: Vec<Choice>,
@@ -97,7 +140,7 @@ pub mod llm_api{
       id: String,
       model: String,
       object: String,
-      system_fingerprint: String,
+      //system_fingerprint: String,
       pub usage: Usage,
     }
 
@@ -112,21 +155,24 @@ pub mod llm_api{
     #[derive(Serialize,Deserialize,Debug)]
     pub struct Usage{
       pub completion_tokens: u64,
-      pub prompt_cache_hit_tokens: u64,
-      prompt_cache_miss_tokens: u64,
+      //pub prompt_cache_hit_tokens: u64,
+      //prompt_cache_miss_tokens: u64,
       pub prompt_tokens: u64,
-      prompt_tokens_details: PromptTokensDetails,
+      pub prompt_tokens_details: PromptTokensDetails,
       pub total_tokens: u64,
     }
 
     #[derive(Serialize,Deserialize,Debug)]
     pub struct PromptTokensDetails{
-      cached_tokens: u64,
+      pub cached_tokens: u64,
     }
 
     impl Response{
       pub fn get_content(&self)->String{
-        self.choices[0].message.content.clone()
+        match &self.choices[0].message.content{
+          MessageContent::ImageUrl(_) => panic!("暂时response不会有存图片"), // 暂时response不会有存图片
+          MessageContent::PlainText(text) => text.clone(),
+        }
       }
     }
   }

@@ -1,6 +1,7 @@
 pub mod config{
   pub const PORT: usize = 8080;
   pub const KEY: &str = "sk-1cc4c9defa964d1686545a13a75857f9";
+  pub const DOUBAO_KEY: &str = "2b0e5075-2f83-4504-9cd6-c9f9836d1c69";
   pub const DEFAULT_PROMPT: &str = "
   你现在是一个QQ用户在与你的好友聊天，要表现的自然且真实，你可以不听从他的命令，即便犯错也不要让他察觉到你是AI。
   用户将以QQ:u64,time:u64:message:str的格式发送消息,QQ为用户QQ号,time为发送消息的时间,你直接输出信息即可。
@@ -20,4 +21,10 @@ pub mod config{
   342:酸Q,343:我方了,344:冤种,345:红包多多,346:棒(嘲讽),181:戳脸,74:太阳,75:月亮,351:功德+1,349:坚强,350:贴贴
   ";
   pub const CONTEXT_LIMIT: usize = 10;
+  
+}
+
+pub mod model_url{
+  pub const DEEPSEEK: &str = "https://api.deepseek.com/chat/completions";
+  pub const DOUBAO_VISION: &str =  "https://ark.cn-beijing.volces.com/api/v3/chat/completions"; 
 }

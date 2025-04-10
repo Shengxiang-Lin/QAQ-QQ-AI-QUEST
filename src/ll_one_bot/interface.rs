@@ -1,5 +1,5 @@
 use serde::{Serialize, Deserialize};
-use crate::llm_api::interface::Response;
+use crate::llm_api::interface::{Response, MessageContent, ImageData};
 
 
 #[derive(Serialize,Deserialize, Debug)]
@@ -21,6 +21,7 @@ pub enum MessageData{
   Text{text: String},
   Face{id: String},
   At{qq:String,name:String},
+  Image{file:String,subType:u8,url:String,file_size:String},
 }
 impl MessageData{
   pub fn get_text(&self) -> String{
@@ -28,6 +29,7 @@ impl MessageData{
       MessageData::Text{text} => text.clone(),
       MessageData::Face{id} => format!("[CQ:face,id={}]",id),
       MessageData::At { qq,name } => format!("[CQ:at,qq={},name={}]",qq,name),
+      MessageData::Image{..} => panic!("暂不支持返回图片")
     }
   }
 }
@@ -89,6 +91,34 @@ impl LLOneBot{
       LLOneBot::Group(message) => message.raw_message.clone(),
     }
   }
+  pub fn get_user_id(&self) -> u64{
+    match self{
+      LLOneBot::Private(message) => message.user_id,
+      LLOneBot::Group(message) => message.user_id,
+    }
+  }
+
+  pub fn get_qq_message(&self) -> &Vec<QQMessage>{
+    match self{
+      LLOneBot::Private(p) => &p.message,
+      LLOneBot::Group(g) => &g.message,
+    }
+  }
+
+  // 在这里提取不同类型回答的content
+  pub fn extract_message_content(&self) -> MessageContent {
+    let qq_message = self.get_qq_message();
+    for qq_message in qq_message.iter() {
+      if let MessageData::Image { url, .. } = &qq_message.data {
+        return MessageContent::ImageUrl([ImageData {
+            r#type: "image_url".to_string(),
+            image_url: url.clone(),
+        }]);
+      }
+    }
+    MessageContent::PlainText(self.get_raw_message())
+}
+
 }
 
 #[derive(Serialize,Deserialize,Debug)]
