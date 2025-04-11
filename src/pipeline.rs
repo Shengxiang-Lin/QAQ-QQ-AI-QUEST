@@ -7,6 +7,7 @@ use crate::{DATABASE_MANAGER,API_SENDER,QQ_SENDER};
 use serde_json::json;
 use actix_web::HttpResponse;
 use crate::llm_api::interface::MessageContent;
+use std::collections::HashSet;
 
 pub async fn handle_message_pipeline(message: LLOneBot) -> Result<SendBack, HttpResponse> {
   validate_message(&message)?;
@@ -41,6 +42,12 @@ fn validate_message(message: &LLOneBot) -> Result<(), HttpResponse> {
   request.handle_special_input();
   request
 }*/
+//智能话题引导
+fn should_guide_conversation(features: &ContextFeatures) -> bool {
+  features.topic_consistency < 0.3 && 
+  features.avg_length > 50 &&
+  features.emotion_tone.abs() < 1
+}
 
 async fn preprocess_message(message: &LLOneBot) -> DeepSeek {
   let dbmanager = DATABASE_MANAGER.get().unwrap();
@@ -61,15 +68,42 @@ async fn preprocess_message(message: &LLOneBot) -> DeepSeek {
       }
   }).collect();
   let features = analyze_context(&history_messages);
+  if should_guide_conversation(&features) {
+    let guide_prompt = generate_guide_prompt(message, &features);
+    request.add_system_message(guide_prompt); // 👈 在这里调用
+  }
   apply_context_strategy(&mut request, &features);
   request.extend_message(context);
   request.add_message(Message::new(ROLE::User, message.extract_message_content()));
   request.handle_special_input();
-  
+  let context_score = calculate_context_score(&history_messages);
+  if context_score > 0.8 {
+      request.add_system_message(
+          "检测到高相关性上下文，请特别注意：\n\
+          - 使用『我们之前讨论过...』等衔接词\n\
+          - 保持术语一致性\n\
+          - 引用具体的历史对话内容".to_string()
+      );
+  }
   request
 }
+// 新增计算函数
+fn calculate_context_score(messages: &[HistoryMessage]) -> f32 {
+  if messages.len() < 2 { return 0.0; }
+  let last_msg = &messages[messages.len()-1].content;
+  messages[..messages.len()-1].iter()
+      .map(|m| semantic_similarity(last_msg, &m.content))
+      .max_by(|a, b| a.partial_cmp(b).unwrap())
+      .unwrap_or(0.0)
+}
+// 简易语义相似度计算
+fn semantic_similarity(a: &str, b: &str) -> f32 {
+  let a_words: HashSet<_> = a.split_whitespace().collect();
+  let b_words: HashSet<_> = b.split_whitespace().collect();
+  let intersection = a_words.intersection(&b_words).count() as f32;
+  intersection / (a_words.len().max(b_words.len())) as f32
+}
 
-// 以下是直接在文件中添加的辅助结构和函数（不修改其他文件）
 #[derive(Default)]
 struct HistoryMessage {
   content: String,
@@ -82,26 +116,26 @@ struct ContextFeatures {
   is_deep_discussion: bool,
   emotion_tone: i32,
   topic_consistency: f32,
+  avg_emoji_count: f32,
 }
 
 fn analyze_context(messages: &[HistoryMessage]) -> ContextFeatures {
   let mut features = ContextFeatures::default();
-  
   if messages.is_empty() {
       return features;
   }
-  
+  features.avg_emoji_count = messages.iter()
+    .map(|m| m.content.matches('😀').count() as f32)
+    .sum::<f32>() / messages.len() as f32;
   // 分析消息长度特征
   features.avg_length = messages.iter()
       .map(|m| m.content.len())
       .sum::<usize>() / messages.len();
-  
   // 检测讨论深度
   features.is_deep_discussion = messages.iter()
       .any(|m| m.content.len() > 100 || 
            m.content.contains("为什么") || 
            m.content.contains("分析"));
-  
   // 检测情感倾向
   let positive_words = ["好", "开心", "谢谢", "喜欢"];
   let negative_words = ["生气", "讨厌", "难受", "不好"];
@@ -110,7 +144,6 @@ fn analyze_context(messages: &[HistoryMessage]) -> ContextFeatures {
           acc + positive_words.iter().filter(|&w| m.content.contains(w)).count() as i32
           - negative_words.iter().filter(|&w| m.content.contains(w)).count() as i32
       });
-  
   // 检测话题集中度
   if messages.len() >= 3 {
       let last_3_msg_keywords = messages.iter().rev().take(3)
@@ -120,12 +153,14 @@ fn analyze_context(messages: &[HistoryMessage]) -> ContextFeatures {
           .filter(|&kw| messages.iter().any(|m| m.content.contains(kw)))
           .count() as f32 / 3.0;
   }
-  
   features
 }
 
 fn apply_context_strategy(deepseek: &mut DeepSeek, features: &ContextFeatures) {
   // 深度讨论模式
+  if features.avg_emoji_count > 1.0 {
+    deepseek.add_system_message("用户偏好使用表情符号，回答时可适当使用表情".to_string());
+  }
   if features.is_deep_discussion {
       deepseek.add_system_message(
           "检测到深度讨论上下文，请：\n\
@@ -168,6 +203,13 @@ async fn process_message(message: &DeepSeek) -> Result<Response,HttpResponse>{
   }else{
     eprintln!("AN ERROR OCCUR:{:?}",result);
     Err(HttpResponse::InternalServerError().finish())
+  }
+}
+
+fn generate_guide_prompt(message: &LLOneBot, features: &ContextFeatures) -> String {
+  match message {
+      LLOneBot::Private(_) => "检测到话题分散，建议主动引导：\n- 提供2-3个相关讨论方向\n- 使用『您是否想了解...』等开放式提问".to_string(),
+      LLOneBot::Group(_) => "检测到群聊话题分散，建议：\n- 总结当前讨论要点\n- 提出投票式问题『大家更关注A还是B？』".to_string()
   }
 }
 
