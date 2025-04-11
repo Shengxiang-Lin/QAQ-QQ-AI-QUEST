@@ -4,6 +4,7 @@ use crate::config::config;
 use crate::ll_one_bot::interface::{LLOneBot,SendBack};
 use crate::llm_api::interface::{ROLE,Response,Message};
 use crate::second2date;
+
 pub struct Database{
   pub pool: Arc<SqlitePool>,
 }

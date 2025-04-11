@@ -44,11 +44,12 @@ async fn preprocess_message(message: &LLOneBot) -> DeepSeek {
 
 async fn process_message(message: &DeepSeek) -> Result<Response,HttpResponse>{
   //调用DeepSeek API处理消息
+  println!("message:{:?}",message);
   let result = API_SENDER.send_api_post(config::model_url::DOUBAO_VISION,message).await;
   if let Ok(response) = result{
     Ok(response)
   }else{
-    println!("AN ERROR OCCUR:{:?}",result);
+    eprintln!("AN ERROR OCCUR:{:?}",result);
     Err(HttpResponse::InternalServerError().finish())
   }
 }
