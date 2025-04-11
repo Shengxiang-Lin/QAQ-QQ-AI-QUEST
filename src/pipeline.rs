@@ -5,7 +5,6 @@ use crate::llm_api::interface::{DeepSeek, Response, ROLE, Message};
 use crate::config;
 use crate::{DATABASE_MANAGER,API_SENDER,QQ_SENDER};
 use serde_json::json;
-
 use actix_web::HttpResponse;
 use crate::llm_api::interface::MessageContent;
 
@@ -28,7 +27,7 @@ fn validate_message(message: &LLOneBot) -> Result<(), HttpResponse> {
   Ok(())
 }
 
-async fn preprocess_message(message: &LLOneBot) -> DeepSeek {
+/*async fn preprocess_message(message: &LLOneBot) -> DeepSeek {
   //处理消息，生成DeepSeek结构体
   let dbmanager = DATABASE_MANAGER.get().unwrap();
   //let mut request = DeepSeek::new("deepseek-chat".to_string(), None, None);
@@ -41,7 +40,124 @@ async fn preprocess_message(message: &LLOneBot) -> DeepSeek {
   //暂时加上的，可能不必要,目前上一句已经处理
   request.handle_special_input();
   request
+}*/
+
+async fn preprocess_message(message: &LLOneBot) -> DeepSeek {
+  let dbmanager = DATABASE_MANAGER.get().unwrap();
+  let mut request = DeepSeek::new("doubao-1.5-vision-pro-32k-250115".to_string(), None, None);
+  request.add_self_config(message.get_self_id());
+  let context = dbmanager.get_context(message).await.unwrap();
+  let history_messages: Vec<HistoryMessage> = context.iter().filter_map(|msg| {
+      if let Message { 
+          role: ROLE::User | ROLE::Assistant, 
+          content: MessageContent::PlainText(text) 
+      } = msg {
+          Some(HistoryMessage {
+              content: text.clone(),
+              ..Default::default()
+          })
+      } else {
+          None
+      }
+  }).collect();
+  let features = analyze_context(&history_messages);
+  apply_context_strategy(&mut request, &features);
+  request.extend_message(context);
+  request.add_message(Message::new(ROLE::User, message.extract_message_content()));
+  request.handle_special_input();
+  
+  request
 }
+
+// 以下是直接在文件中添加的辅助结构和函数（不修改其他文件）
+#[derive(Default)]
+struct HistoryMessage {
+  content: String,
+  // 其他字段不需要实际使用
+}
+
+#[derive(Default)]
+struct ContextFeatures {
+  avg_length: usize,
+  is_deep_discussion: bool,
+  emotion_tone: i32,
+  topic_consistency: f32,
+}
+
+fn analyze_context(messages: &[HistoryMessage]) -> ContextFeatures {
+  let mut features = ContextFeatures::default();
+  
+  if messages.is_empty() {
+      return features;
+  }
+  
+  // 分析消息长度特征
+  features.avg_length = messages.iter()
+      .map(|m| m.content.len())
+      .sum::<usize>() / messages.len();
+  
+  // 检测讨论深度
+  features.is_deep_discussion = messages.iter()
+      .any(|m| m.content.len() > 100 || 
+           m.content.contains("为什么") || 
+           m.content.contains("分析"));
+  
+  // 检测情感倾向
+  let positive_words = ["好", "开心", "谢谢", "喜欢"];
+  let negative_words = ["生气", "讨厌", "难受", "不好"];
+  features.emotion_tone = messages.iter()
+      .fold(0, |acc, m| {
+          acc + positive_words.iter().filter(|&w| m.content.contains(w)).count() as i32
+          - negative_words.iter().filter(|&w| m.content.contains(w)).count() as i32
+      });
+  
+  // 检测话题集中度
+  if messages.len() >= 3 {
+      let last_3_msg_keywords = messages.iter().rev().take(3)
+          .flat_map(|m| extract_keywords(&m.content))
+          .collect::<Vec<_>>();
+      features.topic_consistency = last_3_msg_keywords.iter()
+          .filter(|&kw| messages.iter().any(|m| m.content.contains(kw)))
+          .count() as f32 / 3.0;
+  }
+  
+  features
+}
+
+fn apply_context_strategy(deepseek: &mut DeepSeek, features: &ContextFeatures) {
+  // 深度讨论模式
+  if features.is_deep_discussion {
+      deepseek.add_system_message(
+          "检测到深度讨论上下文，请：\n\
+           - 保持逻辑连贯性\n\
+           - 引用之前讨论的关键点\n\
+           - 允许适度的理论深度\n\
+           - 使用学术性引用格式".to_string()
+      );
+  }
+  // 情感响应模式
+  match features.emotion_tone {
+      x if x > 2 => deepseek.add_system_message("检测到积极情绪，请匹配愉快语气并适当使用表情符号".to_string()),
+      x if x < -2 => deepseek.add_system_message("检测到负面情绪，请先表达共情再提供建议".to_string()),
+      _ => {}
+  }
+  // 长文本模式
+  if features.avg_length > 80 {
+      deepseek.add_system_message("用户偏好详细回复，请提供结构化回答（分点/分步骤）".to_string());
+  }
+  // 话题一致性提示
+  if features.topic_consistency > 0.7 {
+      deepseek.add_system_message("当前话题高度集中，请保持回答的相关性".to_string());
+  }
+}
+
+fn extract_keywords(content: &str) -> Vec<&str> {
+  content.split_whitespace()
+      .filter(|&w| w.len() > 2 && !STOP_WORDS.contains(&w))
+      .collect()
+}
+
+static STOP_WORDS: &[&str] = &["的", "了", "是", "我", "你", "啊"];
 
 async fn process_message(message: &DeepSeek) -> Result<Response,HttpResponse>{
   //调用DeepSeek API处理消息

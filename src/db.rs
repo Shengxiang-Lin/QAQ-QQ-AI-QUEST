@@ -365,4 +365,3 @@ CREATE TABLE IF NOT EXISTS usage_stats (
     prompt_cache_hit_tokens INTEGER NOT NULL,
     completion_tokens INTEGER NOT NULL
 );"#;
-
