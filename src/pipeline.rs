@@ -6,6 +6,7 @@ use crate::config;
 use crate::{DATABASE_MANAGER,API_SENDER,QQ_SENDER};
 use serde_json::json;
 use actix_web::HttpResponse;
+use regex::Regex;
 use crate::llm_api::interface::MessageContent;
 use std::collections::HashSet;
 
@@ -16,7 +17,7 @@ pub async fn handle_message_pipeline(message: LLOneBot) -> Result<SendBack, Http
   apply_system_prompts(&mut deepseek, &message).await?;
   
   let response = process_message(&deepseek).await?;
-  let sendback_message = postprecess_message(&message, &response);
+  let sendback_message = postprocess_message(&message, &response);
   
   log_message(&message, &sendback_message, &response).await;
   Ok(sendback_message)
@@ -44,19 +45,20 @@ fn validate_message(message: &LLOneBot) -> Result<(), HttpResponse> {
 }*/
 //智能话题引导
 fn should_guide_conversation(features: &ContextFeatures) -> bool {
-  features.topic_consistency < 0.3 && 
-  features.avg_length > 50 &&
+  features.topic_consistency < 0.2 && 
+  features.avg_length > 70 &&
   features.emotion_tone.abs() < 1
 }
 
 async fn preprocess_message(message: &LLOneBot) -> DeepSeek {
   let dbmanager = DATABASE_MANAGER.get().unwrap();
-  let mut request = DeepSeek::new("doubao-1.5-vision-pro-32k-250115".to_string(), None, None);
+  // let mut request = DeepSeek::new("doubao-1.5-vision-pro-32k-250115".to_string(), None, None);
+  let mut request = DeepSeek::new("deepseek-chat".to_string(), None, None);
   request.add_self_config(message.get_self_id());
   let context = dbmanager.get_context(message).await.unwrap();
   let history_messages: Vec<HistoryMessage> = context.iter().filter_map(|msg| {
       if let Message { 
-          role: ROLE::User | ROLE::Assistant, 
+          role: ROLE::User , // 只处理用户消息,才能反应用户习惯 
           content: MessageContent::PlainText(text) 
       } = msg {
           Some(HistoryMessage {
@@ -67,7 +69,7 @@ async fn preprocess_message(message: &LLOneBot) -> DeepSeek {
           None
       }
   }).collect();
-  let features = analyze_context(&history_messages);
+  let features = analyze_context(&history_messages, &message.get_raw_message());
   if should_guide_conversation(&features) {
     let guide_prompt = generate_guide_prompt(message, &features);
     request.add_system_message(guide_prompt); // 👈 在这里调用
@@ -80,11 +82,13 @@ async fn preprocess_message(message: &LLOneBot) -> DeepSeek {
   if context_score > 0.8 {
       request.add_system_message(
           "检测到高相关性上下文，请特别注意：\n\
-          - 使用『我们之前讨论过...』等衔接词\n\
+          - 使用『我们之前聊过...』等衔接词\n\
           - 保持术语一致性\n\
           - 引用具体的历史对话内容".to_string()
       );
   }
+  println!("Context features: {:?}", features);
+  println!("Context score: {}", context_score);
   request
 }
 // 新增计算函数
@@ -104,13 +108,13 @@ fn semantic_similarity(a: &str, b: &str) -> f32 {
   intersection / (a_words.len().max(b_words.len())) as f32
 }
 
-#[derive(Default)]
+#[derive(Default,Debug)]
 struct HistoryMessage {
   content: String,
   // 其他字段不需要实际使用
 }
 
-#[derive(Default)]
+#[derive(Default,Debug)]
 struct ContextFeatures {
   avg_length: usize,
   is_deep_discussion: bool,
@@ -119,13 +123,13 @@ struct ContextFeatures {
   avg_emoji_count: f32,
 }
 
-fn analyze_context(messages: &[HistoryMessage]) -> ContextFeatures {
+fn analyze_context(messages: &[HistoryMessage], current_message: &String) -> ContextFeatures {
   let mut features = ContextFeatures::default();
   if messages.is_empty() {
       return features;
   }
   features.avg_emoji_count = messages.iter()
-    .map(|m| m.content.matches('😀').count() as f32)
+    .map(|m| m.content.matches("CQ:face").count() as f32)
     .sum::<f32>() / messages.len() as f32;
   // 分析消息长度特征
   features.avg_length = messages.iter()
@@ -149,25 +153,25 @@ fn analyze_context(messages: &[HistoryMessage]) -> ContextFeatures {
       let last_3_msg_keywords = messages.iter().rev().take(3)
           .flat_map(|m| extract_keywords(&m.content))
           .collect::<Vec<_>>();
+      println!("Last 3 message keywords: {:?}", last_3_msg_keywords);
       features.topic_consistency = last_3_msg_keywords.iter()
-          .filter(|&kw| messages.iter().any(|m| m.content.contains(kw)))
-          .count() as f32 / 3.0;
+          .filter(|&kw| current_message.contains(kw))
+          .count() as f32 / last_3_msg_keywords.len() as f32;
   }
   features
 }
 
 fn apply_context_strategy(deepseek: &mut DeepSeek, features: &ContextFeatures) {
   // 深度讨论模式
-  if features.avg_emoji_count > 1.0 {
-    deepseek.add_system_message("用户偏好使用表情符号，回答时可适当使用表情".to_string());
+  if features.avg_emoji_count < 0.5 {
+    deepseek.add_system_message("用户不偏好使用表情符号，回答时适当减少使用表情".to_string());
   }
   if features.is_deep_discussion {
       deepseek.add_system_message(
           "检测到深度讨论上下文，请：\n\
            - 保持逻辑连贯性\n\
            - 引用之前讨论的关键点\n\
-           - 允许适度的理论深度\n\
-           - 使用学术性引用格式".to_string()
+           - 允许适度的理论深度".to_string()
       );
   }
   // 情感响应模式
@@ -177,27 +181,63 @@ fn apply_context_strategy(deepseek: &mut DeepSeek, features: &ContextFeatures) {
       _ => {}
   }
   // 长文本模式
-  if features.avg_length > 80 {
-      deepseek.add_system_message("用户偏好详细回复，请提供结构化回答（分点/分步骤）".to_string());
+  if features.avg_length > 100 {
+      deepseek.add_system_message("用户偏好详细回复，回复长一些".to_string());
+  }else{
+    deepseek.add_system_message("用户偏好较短聊天，回复更像短聊天".to_string());
   }
   // 话题一致性提示
-  if features.topic_consistency > 0.7 {
+  if features.topic_consistency > 0.5 {
       deepseek.add_system_message("当前话题高度集中，请保持回答的相关性".to_string());
   }
 }
 
-fn extract_keywords(content: &str) -> Vec<&str> {
-  content.split_whitespace()
-      .filter(|&w| w.len() > 2 && !STOP_WORDS.contains(&w))
-      .collect()
-}
+fn extract_keywords(content: &str) -> Vec<String> {
+  // 只要 message后面部分
+  let re = Regex::new(r"message:(.*)").unwrap();
+  if let Some(captures) = re.captures(content) {
+      if let Some(message) = captures.get(1) {
+          // 提取 message 部分的内容
+          let message_content = message.as_str();
+          
+          // 分词并过滤停用词
+          let stop_words = vec![r"[\s.,!?。，；：“”‘’]","的", "了", "是", "我", "你", "啊", "还", "不", "巨","个","像","就","这","那","有","要","吗","吧","CQ","id"];
+          let stop_words_pattern = stop_words.join("|");
+          let keywords = re
+            .split(message_content) 
+            .filter(|word| word.len() > 2); // 过滤长度小于等于2的词和停用词
 
-static STOP_WORDS: &[&str] = &["的", "了", "是", "我", "你", "啊"];
+          // 生成2-3字的关键词组合
+          let mut refined_keywords = Vec::new();
+          for keyword in keywords {
+              let chars: Vec<char> = keyword.chars().collect();
+              for i in 0..chars.len() {
+                  if i + 2 <= chars.len() {
+                      refined_keywords.push(chars[i..i + 2].iter().collect());
+                  }
+                  if i + 3 <= chars.len() {
+                      refined_keywords.push(chars[i..i + 3].iter().collect());
+                  }
+              }
+          }
+            refined_keywords
+
+      } else {
+          vec![]
+      }
+  } else {
+      vec![]
+  }
+}
 
 async fn process_message(message: &DeepSeek) -> Result<Response,HttpResponse>{
   //调用DeepSeek API处理消息
   println!("message:{:?}",message);
-  let result = API_SENDER.send_api_post(config::model_url::DOUBAO_VISION,message).await;
+  let result = match message.model.as_str(){
+    "doubao-1.5-vision-pro-32k-250115" => API_SENDER.send_api_post(config::model_url::DOUBAO_VISION,message).await,      
+    "deepseek-chat" => API_SENDER.send_api_post(config::model_url::DEEPSEEK,message).await,
+    _ => return Err(HttpResponse::BadRequest().body("Invalid model name")),
+  };
   if let Ok(response) = result{
     Ok(response)
   }else{
@@ -208,12 +248,12 @@ async fn process_message(message: &DeepSeek) -> Result<Response,HttpResponse>{
 
 fn generate_guide_prompt(message: &LLOneBot, features: &ContextFeatures) -> String {
   match message {
-      LLOneBot::Private(_) => "检测到话题分散，建议主动引导：\n- 提供2-3个相关讨论方向\n- 使用『您是否想了解...』等开放式提问".to_string(),
+      LLOneBot::Private(_) => "检测到话题分散，建议主动引导：\n- 提供2-3个相关讨论方向\n- 使用『你是不是想说...』等开放式提问".to_string(),
       LLOneBot::Group(_) => "检测到群聊话题分散，建议：\n- 总结当前讨论要点\n- 提出投票式问题『大家更关注A还是B？』".to_string()
   }
 }
 
-fn postprecess_message(message:&LLOneBot, response: &Response) -> SendBack{
+fn postprocess_message(message:&LLOneBot, response: &Response) -> SendBack{
   //处理QQ回复消息
   let sendback = SendBackIntermediate::from(response);
   match message {
@@ -236,6 +276,7 @@ async fn apply_system_prompts(deepseek: &mut DeepSeek, message: &LLOneBot) -> Re
   };
   // 首先分析消息类型
   let msg_type = analyze_message_type(&content);
+  println!("Message type: {:?}", msg_type);
   // 根据消息类型添加不同的系统提示和思考要求
   match msg_type {
       MessageType::FactualQuestion => {

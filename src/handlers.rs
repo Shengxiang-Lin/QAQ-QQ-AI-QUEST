@@ -77,7 +77,7 @@ pub async fn show_info(
     // 3. 尝试解析
     match web::Json::<LLOneBot>::from_request(&req, &mut body.into()).await {
         Ok(valid_info) => {
-            println!("✅ Parsed successfully: {:#?}", valid_info);
+            // println!("✅ Parsed successfully: {:#?}", valid_info);
             match handle_message_pipeline(valid_info.into_inner()).await {
                 Ok(sendback) => {
                     if let Err(e) = QQ_SENDER.send_qq_post(&sendback).await {

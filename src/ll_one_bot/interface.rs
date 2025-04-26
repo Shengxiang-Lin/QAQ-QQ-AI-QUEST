@@ -217,7 +217,7 @@ pub fn extract_cq(raw: String) -> Vec<QQMessage> {
   for caps in re.captures_iter(&raw) {
       let cq_type = caps.get(1).unwrap().as_str();
       let params = caps.get(2).unwrap().as_str();
-      println!("{:?}",cq_type);
+      //println!("{:?}",cq_type);
       let message = match cq_type {
           "face" => QQMessage{
               r#type: "face".to_string(),

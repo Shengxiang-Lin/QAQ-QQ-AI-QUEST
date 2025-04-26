@@ -73,7 +73,7 @@ pub mod llm_api{
 
     #[derive(Serialize,Deserialize,Debug)]
     pub struct DeepSeek{
-      model: String,
+      pub model: String,
       messages: Vec<Message>,
       presence_penalty: f32, // 介于-2 ~ 2之间，越大越容易转移话题
       temperature: f32, // 介于0 ~ 2之间，越大越随机
@@ -95,7 +95,7 @@ pub mod llm_api{
       pub fn add_system_message(&mut self, content: String){
         let mut count:usize = 0;
         for i in self.messages.iter(){
-          if i.role != ROLE::System{
+          if i.role == ROLE::System{
             count += 1;
           }else{
             break;
