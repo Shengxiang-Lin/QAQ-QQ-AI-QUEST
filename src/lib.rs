@@ -17,7 +17,7 @@ pub mod ll_one_bot{
 pub mod llm_api{
   pub mod interface{
     use serde::{Serialize, Deserialize};
-    use crate::config::config;
+    use crate::config::{get_config,default_config};
 
 
     pub trait LLM{
@@ -82,8 +82,12 @@ pub mod llm_api{
     impl DeepSeek{
       pub fn new(model: String, presence_penalty: Option<f32>, temperature: Option<f32>)->Self{
         let mut message = Vec::new();
-        message.push(Message::new_text(ROLE::System, config::DEFAULT_PROMPT.to_string()));
-        message.push(Message::new_text(ROLE::System, config::FACE_ID_MAP.to_string()));
+        let config = get_config();
+        message.push(Message::new_text(ROLE::System, config.default_prompt.clone()));
+        message.push(Message::new_text(ROLE::System, default_config::SEETTING_PROMPT.to_string()));
+        if config.open_face_support{
+          message.push(Message::new_text(ROLE::System, default_config::FACE_ID_MAP.to_string()));
+        }
         Self{
           model,
           messages: message,

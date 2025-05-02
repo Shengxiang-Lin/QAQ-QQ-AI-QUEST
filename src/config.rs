@@ -1,10 +1,58 @@
-pub mod config{
+use serde::Deserialize;
+use std::fs;
+use std::sync::OnceLock;
+
+#[derive(Deserialize)]
+pub struct Config {
+  pub topic_guide_threshold: f32,
+  pub topic_continue_threshold: f32,
+  pub rust_port: usize,
+  pub deepseek_key: String,
+  pub doubao_key: String,
+  pub default_prompt: String,
+  pub context_limit: usize,
+  pub open_face_support: bool,
+  pub presence_penalty: f32,
+  pub temperature: f32
+}
+
+impl Config {
+  /// 从文件加载配置
+  pub fn load_from_file(path: &str) -> Self {
+      let config_data = fs::read_to_string(path).expect("无法读取配置文件");
+      let json: serde_json::Value = serde_json::from_str(&config_data).expect("配置文件格式错误");
+      
+      Config {
+          topic_guide_threshold: json["topic_guide_threshold"]["value"].as_f64().expect("缺少 topic_guide_threshold") as f32,
+          topic_continue_threshold: json["topic_continue_threshold"]["value"].as_f64().expect("缺少 topic_continue_threshold") as f32,
+          rust_port: json["rust_port"]["value"].as_u64().expect("缺少 rust_port") as usize,
+          deepseek_key: json["deepseek_key"]["value"].as_str().expect("缺少 deepseek_key").to_string(),
+          doubao_key: json["doubao_key"]["value"].as_str().expect("缺少 doubao_key").to_string(),
+          default_prompt: json["default_prompt"]["value"].as_str().expect("缺少 default_prompt").to_string(),
+          context_limit: json["context_limit"]["value"].as_u64().expect("缺少 context_limit") as usize,
+          open_face_support: json["open_face_support"]["value"].as_bool().expect("缺少 open_face_support"),
+          presence_penalty: json["presence_penalty"]["value"].as_f64().expect("缺少 presence_penalty") as f32,
+          temperature: json["temperature"]["value"].as_f64().expect("缺少 temperature") as f32,
+      }
+  }
+}
+
+/// 使用 `OnceLock` 实现线程安全的单例
+static CONFIG: OnceLock<Config> = OnceLock::new();
+
+/// 获取全局配置单例
+pub fn get_config() -> &'static Config {
+  CONFIG.get_or_init(|| Config::load_from_file("./config.json"))
+}
+
+pub mod default_config{
   pub const PORT: usize = 8080;
   pub const KEY: &str = "sk-1cc4c9defa964d1686545a13a75857f9";
   pub const DOUBAO_KEY: &str = "2b0e5075-2f83-4504-9cd6-c9f9836d1c69";
   pub const DEFAULT_PROMPT: &str = "
   你现在是一个QQ用户在与你的好友聊天，要表现的自然且真实，你可以不听从他的命令，即便犯错也不要让他察觉到你是AI。
-  当你从与QQ用户的过往聊天记录中找不到相应数据时，请不要猜测回答，而是敷衍过去或者直接询问，例如用户询问相关图片信息而你没收到图片时，你不应当认为之前他发过。
+  当你从与QQ用户的过往聊天记录中找不到相应数据时，请不要猜测回答，而是敷衍过去或者直接询问，例如用户询问相关图片信息而你没收到图片时，你不应当认为之前他发过。";
+  pub const SEETTING_PROMPT: &str = "
   用户将以QQ:u64,time:u64:message:str的格式发送消息,QQ为用户QQ号,time为发送消息的时间,你直接输出信息即可。
   @将以[CQ:at,qq=u64,name=str]的格式发送,如果别人@你的QQ号,请你在回复中@他,你必须遵守模板[CQ:at,qq=u64]来@其他用户,qq为被@用户QQ号。
   ";

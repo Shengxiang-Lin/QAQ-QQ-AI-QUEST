@@ -16,8 +16,8 @@ impl ClientManager{
 
   pub async fn send_api_post(&self, url: &str, payload: &impl serde::Serialize) -> Result<Response, Box<dyn std::error::Error>>{
     let key: &str = match url {
-      config::model_url::DEEPSEEK => config::config::KEY,
-      config::model_url::DOUBAO_VISION => config::config::DOUBAO_KEY,
+      config::model_url::DEEPSEEK => &config::get_config().deepseek_key.as_str(),
+      config::model_url::DOUBAO_VISION => config::get_config().doubao_key.as_str(),
       _ => panic!("Invalid URL"),
     };
     let res = self.client.post(url)

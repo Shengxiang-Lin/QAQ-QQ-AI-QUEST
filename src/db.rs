@@ -1,6 +1,6 @@
 use sqlx::{SqlitePool,Row};
 use std::sync::Arc;
-use crate::config::config;
+use crate::config::get_config;
 use crate::ll_one_bot::interface::{LLOneBot,SendBack};
 use crate::llm_api::interface::{ROLE,Response,Message};
 use crate::second2date;
@@ -110,7 +110,7 @@ impl Database{
         LIMIT ?
         ;"#)
     .bind(user_id as i64)
-    .bind(config::CONTEXT_LIMIT as i32)
+    .bind(get_config().context_limit as i32)
     .fetch_all(&*self.pool)
     .await?;
     let responses = sqlx::query(
@@ -122,7 +122,7 @@ impl Database{
       LIMIT ?
       ;"#)
     .bind(user_id as i64)
-    .bind(config::CONTEXT_LIMIT as i32)
+    .bind(get_config().context_limit as i32)
     .fetch_all(&*self.pool)
     .await?;
     let mut combined: Vec<(u64, String, u64)> = Vec::new();  
@@ -135,7 +135,7 @@ impl Database{
     }
 
     combined.sort_by(|a, b| b.2.cmp(&a.2)); // 按时间倒序
-    let limited = combined.into_iter().take(config::CONTEXT_LIMIT).collect();
+    let limited = combined.into_iter().take(get_config().context_limit).collect();
     Ok(limited)
   }
 
@@ -148,7 +148,7 @@ impl Database{
         LIMIT ?
         ;"#)
     .bind(group_id as i64)
-    .bind(config::CONTEXT_LIMIT as i32)
+    .bind(get_config().context_limit as i32)
     .fetch_all(&*self.pool)
     .await?;
     let responses = sqlx::query(
@@ -159,7 +159,7 @@ impl Database{
       LIMIT ?
       ;"#)
     .bind(group_id as i64)
-    .bind(config::CONTEXT_LIMIT as i32)
+    .bind(get_config().context_limit as i32)
     .fetch_all(&*self.pool)
     .await?;
     let mut combined: Vec<(u64, String, u64)> = Vec::new();  
@@ -172,7 +172,7 @@ impl Database{
     }
 
     combined.sort_by(|a, b| b.2.cmp(&a.2));
-    let limited = combined.into_iter().take(config::CONTEXT_LIMIT).collect();
+    let limited = combined.into_iter().take(get_config().context_limit).collect();
     Ok(limited)
   }
 

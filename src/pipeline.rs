@@ -2,7 +2,7 @@
 #![allow(unused_variables)]
 use crate::ll_one_bot::interface::{LLOneBot,SendBackIntermediate,SendBack};
 use crate::llm_api::interface::{DeepSeek, Response, ROLE, Message};
-use crate::config;
+use crate::config::{get_config,model_url};
 use crate::{DATABASE_MANAGER,API_SENDER,QQ_SENDER};
 use serde_json::json;
 use actix_web::HttpResponse;
@@ -45,15 +45,13 @@ fn validate_message(message: &LLOneBot) -> Result<(), HttpResponse> {
 }*/
 //智能话题引导
 fn should_guide_conversation(features: &ContextFeatures) -> bool {
-  features.topic_consistency < 0.2 && 
-  features.avg_length > 70 &&
-  features.emotion_tone.abs() < 1
+  features.topic_consistency < get_config().topic_guide_threshold
 }
 
 async fn preprocess_message(message: &LLOneBot) -> DeepSeek {
   let dbmanager = DATABASE_MANAGER.get().unwrap();
   // let mut request = DeepSeek::new("doubao-1.5-vision-pro-32k-250115".to_string(), None, None);
-  let mut request = DeepSeek::new("deepseek-chat".to_string(), None, None);
+  let mut request = DeepSeek::new("deepseek-chat".to_string(), Some(get_config().presence_penalty), Some(get_config().temperature));
   request.add_self_config(message.get_self_id());
   let context = dbmanager.get_context(message).await.unwrap();
   let history_messages: Vec<HistoryMessage> = context.iter().filter_map(|msg| {
@@ -78,35 +76,11 @@ async fn preprocess_message(message: &LLOneBot) -> DeepSeek {
   request.extend_message(context);
   request.add_message(Message::new(ROLE::User, message.extract_message_content()));
   request.handle_special_input();
-  let context_score = calculate_context_score(&history_messages);
-  if context_score > 0.8 {
-      request.add_system_message(
-          "检测到高相关性上下文，请特别注意：\n\
-          - 使用『我们之前聊过...』等衔接词\n\
-          - 保持术语一致性\n\
-          - 引用具体的历史对话内容".to_string()
-      );
-  }
   println!("Context features: {:?}", features);
-  println!("Context score: {}", context_score);
+
   request
 }
 // 新增计算函数
-fn calculate_context_score(messages: &[HistoryMessage]) -> f32 {
-  if messages.len() < 2 { return 0.0; }
-  let last_msg = &messages[messages.len()-1].content;
-  messages[..messages.len()-1].iter()
-      .map(|m| semantic_similarity(last_msg, &m.content))
-      .max_by(|a, b| a.partial_cmp(b).unwrap())
-      .unwrap_or(0.0)
-}
-// 简易语义相似度计算
-fn semantic_similarity(a: &str, b: &str) -> f32 {
-  let a_words: HashSet<_> = a.split_whitespace().collect();
-  let b_words: HashSet<_> = b.split_whitespace().collect();
-  let intersection = a_words.intersection(&b_words).count() as f32;
-  intersection / (a_words.len().max(b_words.len())) as f32
-}
 
 #[derive(Default,Debug)]
 struct HistoryMessage {
@@ -187,7 +161,7 @@ fn apply_context_strategy(deepseek: &mut DeepSeek, features: &ContextFeatures) {
     deepseek.add_system_message("用户偏好较短聊天，回复更像短聊天".to_string());
   }
   // 话题一致性提示
-  if features.topic_consistency > 0.5 {
+  if features.topic_consistency > get_config().topic_continue_threshold {
       deepseek.add_system_message("当前话题高度集中，请保持回答的相关性".to_string());
   }
 }
@@ -234,8 +208,8 @@ async fn process_message(message: &DeepSeek) -> Result<Response,HttpResponse>{
   //调用DeepSeek API处理消息
   println!("message:{:?}",message);
   let result = match message.model.as_str(){
-    "doubao-1.5-vision-pro-32k-250115" => API_SENDER.send_api_post(config::model_url::DOUBAO_VISION,message).await,      
-    "deepseek-chat" => API_SENDER.send_api_post(config::model_url::DEEPSEEK,message).await,
+    "doubao-1.5-vision-pro-32k-250115" => API_SENDER.send_api_post(model_url::DOUBAO_VISION,message).await,      
+    "deepseek-chat" => API_SENDER.send_api_post(model_url::DEEPSEEK,message).await,
     _ => return Err(HttpResponse::BadRequest().body("Invalid model name")),
   };
   if let Ok(response) = result{

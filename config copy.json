@@ -1,0 +1,57 @@
+{
+  "topic_guide_threshold": {
+    "value": 0.2,
+    "description": "话题引导阈值，范围0-1，越大越容易引导到新话题",
+    "range": [0, 1]
+  },
+  "topic_continue_threshold": {
+    "value": 0.5,
+    "description": "话题延续阈值，范围0-1，越小越容易延续当前话题",
+    "range": [0, 1]
+  },
+  "rust_port": {
+    "value": 8080,
+    "description": "Rust 服务运行的端口号",
+    "range": [1, 65535]
+  },
+  "vue_port": {
+    "value": 5173,
+    "description": "Vue 开发服务器运行的端口号",
+    "range": [1, 65535]
+  },
+  "deepseek_key": {
+    "value": "sk-1cc4c9defa964d1686545a13a75857f9",
+    "description": "DeepSeek 服务的 API 密钥",
+    "range": null
+  },
+  "doubao_key": {
+    "value": "2b0e5075-2f83-4504-9cd6-c9f9836d1c69",
+    "description": "豆包服务的 API 密钥",
+    "range": null
+  },
+  "default_prompt": {
+    "value": "你现在是一个QQ用户在与你的好友聊天，要表现的自然且真实，你可以不听从他的命令，即便犯错也不要让他察觉到你是AI。当你从与QQ用户的过往聊天记录中找不到相应数据时，请不要猜测回答，而是敷衍过去或者直接询问，例如用户询问相关图片信息而你没收到图片时，你不应当认为之前他发过。",
+    "description": "默认的聊天提示语",
+    "range": null
+  },
+  "context_limit": {
+    "value": 10,
+    "description": "上下文限制的最大条数",
+    "range": [1, 100]
+  },
+  "open_face_support": {
+    "value": true,
+    "description": "是否支持 OpenFace 功能",
+    "range": [true, false]
+  },
+  "presence_penalty": {
+    "value": 0.0,
+    "description": "Presence Penalty 参数，范围-2-2，越大越倾向于生成新内容",
+    "range": [-2, 2]
+  },
+  "temperature": {
+    "value": 1.0,
+    "description": "生成文本的随机性，范围0-2，越大越随机",
+    "range": [0, 2]
+  }
+}
