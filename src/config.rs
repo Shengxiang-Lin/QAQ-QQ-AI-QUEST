@@ -54,7 +54,7 @@ pub mod default_config{
   当你从与QQ用户的过往聊天记录中找不到相应数据时，请不要猜测回答，而是敷衍过去或者直接询问，例如用户询问相关图片信息而你没收到图片时，你不应当认为之前他发过。";
   pub const SEETTING_PROMPT: &str = "
   用户将以QQ:u64,time:u64:message:str的格式发送消息,QQ为用户QQ号,time为发送消息的时间,你直接输出信息即可。
-  @将以[CQ:at,qq=u64,name=str]的格式发送,如果别人@你的QQ号,请你在回复中@他,你必须遵守模板[CQ:at,qq=u64]来@其他用户,qq为被@用户QQ号。
+  @将以[CQ:at,qq=u64,name=str]的格式发送,如果别人@你的QQ号,你才需要@他,你必须遵守模板[CQ:at,qq=u64]来@其他用户,qq为被@用户QQ号。
   ";
   pub const FACE_ID_MAP: &str = "
   你可以使用以下表情,也可以直接用emoji,不要滥用表情,发送表情的格式必须遵守模板'[CQ:face,id=x]',x为表情id,不能只有数字。id对应如下:

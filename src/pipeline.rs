@@ -14,7 +14,7 @@ pub async fn handle_message_pipeline(message: LLOneBot) -> Result<SendBack, Http
   validate_message(&message)?;
   let mut deepseek = preprocess_message(&message).await;
   // 简化思考环节，仅添加系统提示
-  apply_system_prompts(&mut deepseek, &message).await?;
+  // apply_system_prompts(&mut deepseek, &message).await?;
   
   let response = process_message(&deepseek).await?;
   let sendback_message = postprocess_message(&message, &response);
@@ -50,8 +50,8 @@ fn should_guide_conversation(features: &ContextFeatures) -> bool {
 
 async fn preprocess_message(message: &LLOneBot) -> DeepSeek {
   let dbmanager = DATABASE_MANAGER.get().unwrap();
-  // let mut request = DeepSeek::new("doubao-1.5-vision-pro-32k-250115".to_string(), None, None);
-  let mut request = DeepSeek::new("deepseek-chat".to_string(), Some(get_config().presence_penalty), Some(get_config().temperature));
+  // let mut request = DeepSeek::new("deepseek-chat".to_string(), None, None);
+  let mut request = DeepSeek::new("doubao-1.5-vision-pro-32k-250115".to_string(), Some(get_config().presence_penalty), Some(get_config().temperature));
   request.add_self_config(message.get_self_id());
   let context = dbmanager.get_context(message).await.unwrap();
   let history_messages: Vec<HistoryMessage> = context.iter().filter_map(|msg| {
@@ -67,16 +67,16 @@ async fn preprocess_message(message: &LLOneBot) -> DeepSeek {
           None
       }
   }).collect();
-  let features = analyze_context(&history_messages, &message.get_raw_message());
-  if should_guide_conversation(&features) {
-    let guide_prompt = generate_guide_prompt(message, &features);
-    request.add_system_message(guide_prompt); // 👈 在这里调用
-  }
-  apply_context_strategy(&mut request, &features);
+  //let features = analyze_context(&history_messages, &message.get_raw_message());
+  // if should_guide_conversation(&features) {
+  //   let guide_prompt = generate_guide_prompt(message, &features);
+  //   request.add_system_message(guide_prompt); // 👈 在这里调用
+  // }
+  // apply_context_strategy(&mut request, &features);
   request.extend_message(context);
   request.add_message(Message::new(ROLE::User, message.extract_message_content()));
   request.handle_special_input();
-  println!("Context features: {:?}", features);
+  // println!("Context features: {:?}", features);
 
   request
 }
