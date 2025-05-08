@@ -1,5 +1,5 @@
 // main.scss - General SCSS styles for a web framework
-
+@use "sass:color";  // 添加这行导入 color 模块
 // Variables
 $primary-color: #3498db;
 $secondary-color: #2ecc71;
@@ -52,7 +52,7 @@ body {
   transition: background-color 0.3s ease;
 
   &:hover {
-    background-color: adjust-color($primary-color, $lightness: -10%);
+    background-color: color.adjust($primary-color, $lightness: -10%);
   }
 }
 
