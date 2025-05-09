@@ -13,7 +13,8 @@ pub struct Config {
   pub context_limit: usize,
   pub open_face_support: bool,
   pub presence_penalty: f32,
-  pub temperature: f32
+  pub temperature: f32,
+  pub valid_qq: Vec<u64>,
 }
 
 impl Config {
@@ -21,7 +22,6 @@ impl Config {
   pub fn load_from_file(path: &str) -> Self {
       let config_data = fs::read_to_string(path).expect("无法读取配置文件");
       let json: serde_json::Value = serde_json::from_str(&config_data).expect("配置文件格式错误");
-      
       Config {
           topic_guide_threshold: json["topic_guide_threshold"]["value"].as_f64().expect("缺少 topic_guide_threshold") as f32,
           topic_continue_threshold: json["topic_continue_threshold"]["value"].as_f64().expect("缺少 topic_continue_threshold") as f32,
@@ -33,7 +33,13 @@ impl Config {
           open_face_support: json["open_face_support"]["value"].as_bool().expect("缺少 open_face_support"),
           presence_penalty: json["presence_penalty"]["value"].as_f64().expect("缺少 presence_penalty") as f32,
           temperature: json["temperature"]["value"].as_f64().expect("缺少 temperature") as f32,
-      }
+            valid_qq: json["valid_QQid"]["value"]
+            .as_array()
+            .expect("缺少 valid_QQid")
+            .iter()
+            .map(|v| v["text"].as_str().expect("QQ号不合法").parse::<u64>().expect("QQ号无法解析为u64"))
+            .collect()
+          }
   }
 }
 

@@ -26,6 +26,11 @@ pub async fn handle_message_pipeline(message: LLOneBot) -> Result<SendBack, Http
 
 fn validate_message(message: &LLOneBot) -> Result<(), HttpResponse> {
   //验证消息、用户信息等
+  let qqids:&Vec<u64> = &get_config().valid_qq;
+  let user_id = message.get_user_id();
+  if !qqids.contains(&user_id) {
+    return Err(HttpResponse::BadRequest().body("Invalid user ID"));
+  }
   Ok(())
 }
 
@@ -50,8 +55,8 @@ fn should_guide_conversation(features: &ContextFeatures) -> bool {
 
 async fn preprocess_message(message: &LLOneBot) -> DeepSeek {
   let dbmanager = DATABASE_MANAGER.get().unwrap();
-  // let mut request = DeepSeek::new("deepseek-chat".to_string(), None, None);
-  let mut request = DeepSeek::new("doubao-1.5-vision-pro-32k-250115".to_string(), Some(get_config().presence_penalty), Some(get_config().temperature));
+  // let mut request = DeepSeek::new("doubao-1.5-vision-pro-32k-250115".to_string(), None, None);
+  let mut request = DeepSeek::new("deepseek-chat".to_string(), Some(get_config().presence_penalty), Some(get_config().temperature));
   request.add_self_config(message.get_self_id());
   let context = dbmanager.get_context(message).await.unwrap();
   let history_messages: Vec<HistoryMessage> = context.iter().filter_map(|msg| {

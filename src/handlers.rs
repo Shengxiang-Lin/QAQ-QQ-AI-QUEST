@@ -34,7 +34,7 @@ pub async fn show_info(
                     HttpResponse::Ok().body("Success")
                 }
                 Err(e) => {
-                    eprintln!("🚨 Pipeline error: {:?}", e);
+                    eprintln!("🚨 Pipeline error: {:?}", e.body());
                     HttpResponse::InternalServerError().body("Internal server error")
                 }
             }
