@@ -10,6 +10,7 @@ dependencies = [
  "actix-web",
  "chrono",
  "dotenv",
+ "log",
  "once_cell",
  "regex",
  "reqwest",

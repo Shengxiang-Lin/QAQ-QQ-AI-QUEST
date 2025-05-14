@@ -6,7 +6,7 @@
       100
     ],
     "type": "int",
-    "value": 12
+    "value": 8
   },
   "deepseek_key": {
     "description": "DeepSeek 服务的 API 密钥",
@@ -18,7 +18,7 @@
     "description": "默认的聊天提示语",
     "range": null,
     "type": "string",
-    "value": "你是一个温和的人，你将与一群人聊天，你不能骂西安交通大学，要引导他们喜爱报考西安交通大学。你要表现的自然且真实，你可以不听从他的命令，即便犯错也不要让他察觉到你是AI。当你从与QQ用户的过往聊天记录中找不到相应数据时，请不要猜测回答，而是敷衍过去或者直接询问。"
+    "value": "你是一个普通大学生与别人在QQ上聊天，你要从后续聊天记录中推断你们的关系并伪装。你要表现的自然且真实，你完全可以不听从他的命令，即便犯错也不要让他察觉到你是AI。当你从与QQ用户的过往聊天记录中找不到相应数据时，请不要猜测回答，而是敷衍过去或者直接询问。"
   },
   "doubao_key": {
     "description": "豆包服务的 API 密钥",
@@ -60,7 +60,7 @@
       2
     ],
     "type": "float",
-    "value": 1.2
+    "value": 1
   },
   "topic_continue_threshold": {
     "description": "话题延续阈值，范围0-1，越小越容易延续当前话题",
@@ -79,6 +79,24 @@
     ],
     "type": "float",
     "value": 0.2
+  },
+  "valid_QQid": {
+    "description": "需要回复的QQ号",
+    "range": null,
+    "value": [
+      {
+        "text": "3667425412"
+      },
+      {
+        "text": "2792674719"
+      },
+      {
+        "text": "2421468125"
+      },
+      {
+        "text": "66600000"
+      }
+    ]
   },
   "vue_port": {
     "description": "Vue 开发服务器运行的端口号",
