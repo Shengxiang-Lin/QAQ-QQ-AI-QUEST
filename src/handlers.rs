@@ -73,3 +73,16 @@ pub async fn update_config(payload: web::Json<serde_json::Value>) -> impl Respon
         }
     }
 }
+
+#[get("/config_new")]
+pub async fn show_new_config() -> impl Responder {
+    match fs::read_to_string("./config_new.json") {
+        Ok(config_data) => HttpResponse::Ok()
+            .content_type("application/json")
+            .body(config_data),
+        Err(e) => {
+            eprintln!("❌ Failed to read config_new.json file: {:?}", e);
+            HttpResponse::InternalServerError().body("Failed to read config_new.json file")
+        }
+    }
+}

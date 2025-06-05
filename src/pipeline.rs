@@ -55,8 +55,8 @@ fn should_guide_conversation(features: &ContextFeatures) -> bool {
 
 async fn preprocess_message(message: &LLOneBot) -> DeepSeek {
   let dbmanager = DATABASE_MANAGER.get().unwrap();
-  // let mut request = DeepSeek::new("doubao-1.5-vision-pro-32k-250115".to_string(), None, None);
   let mut request = DeepSeek::new("deepseek-chat".to_string(), Some(get_config().presence_penalty), Some(get_config().temperature));
+  //let mut request = DeepSeek::new("doubao-1.5-vision-pro-32k-250115".to_string(), None, None);
   request.add_self_config(message.get_self_id());
   let context = dbmanager.get_context(message).await.unwrap();
   let history_messages: Vec<HistoryMessage> = context.iter().filter_map(|msg| {

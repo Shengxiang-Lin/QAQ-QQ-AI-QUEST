@@ -1,6 +1,8 @@
 <template>
   <div class="app-container">
     <h1 class="title">QQ AI Quest 参数设置</h1>
+    <!-- 新增按钮 -->
+    <button @click="useNewConfig">使用 config_new.json 配置</button>
     <div class="parameters-container">
       <div
         v-for="(value, key) in filteredParameters"
@@ -38,6 +40,7 @@
 import { getAllParameters, updateJS } from "@/utils.js";
 import Parameter from "@/components/Parameter.vue";
 import { ref, onMounted, computed } from "vue";
+import axios from 'axios';
 
 const parameters = ref({});
 
@@ -60,6 +63,25 @@ const submitChange = async (name, UpdateParameter) => {
   parameters.value[name] = UpdateParameter;
   await updateJS(parameters.value);
   alert("参数已更新!");
+};
+
+// 新增方法
+const useNewConfig = async () => {
+  try {
+    // 获取 config_new.json 的内容
+    const response = await axios.get(`http://localhost:${__HOST_PORT__}/config_new`);
+    const newConfig = response.data;
+
+    // 更新网页上的参数
+    parameters.value = newConfig;
+
+    // 更新 config.json 的内容
+    await updateJS(newConfig);
+    alert("已使用 config_new.json 的配置！");
+  } catch (error) {
+    console.error('获取 config_new.json 失败：', error);
+    alert('获取 config_new.json 失败，请检查！');
+  }
 };
 </script>
 
@@ -106,5 +128,19 @@ const submitChange = async (name, UpdateParameter) => {
   background-color: #fff;
   padding: 10px;
   border-radius: 8px;
+}
+
+button {
+  margin-bottom: 20px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
 }
 </style>
