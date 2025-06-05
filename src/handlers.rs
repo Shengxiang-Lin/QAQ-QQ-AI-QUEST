@@ -2,6 +2,7 @@ use actix_web::{post, web, HttpRequest, HttpResponse, Responder, get};
 use crate::{ll_one_bot::interface::*, pipeline::handle_message_pipeline, QQ_SENDER};
 use actix_web::FromRequest;
 use std::fs;
+use std::path::Path;
 
 #[post("/")]
 pub async fn show_info(
@@ -74,15 +75,41 @@ pub async fn update_config(payload: web::Json<serde_json::Value>) -> impl Respon
     }
 }
 
-#[get("/config_new")]
-pub async fn show_new_config() -> impl Responder {
-    match fs::read_to_string("./config_new.json") {
+#[get("/config_new_list")]
+pub async fn get_config_new_list() -> impl Responder {
+    let config_new_dir = Path::new("./config_new");
+    if let Ok(entries) = fs::read_dir(config_new_dir) {
+        let config_files: Vec<String> = entries
+           .filter_map(|entry| {
+                let entry = entry.ok()?;
+                let path = entry.path();
+                if path.is_file() && path.extension().map(|s| s == "json").unwrap_or(false) {
+                    path.file_name().and_then(|s| s.to_str().map(|s| s.to_string()))
+                } else {
+                    None
+                }
+            })
+           .collect();
+        HttpResponse::Ok()
+           .content_type("application/json")
+           .body(serde_json::to_string(&config_files).unwrap())
+    } else {
+        HttpResponse::InternalServerError().body("Failed to read config_new directory")
+    }
+}
+
+// 获取指定的 config_new 配置文件内容
+#[get("/config_new/{filename}")]
+pub async fn show_new_config(path: web::Path<String>) -> impl Responder {
+    let filename = path.into_inner();
+    let config_path = format!("./config_new/{}", filename);
+    match fs::read_to_string(&config_path) {
         Ok(config_data) => HttpResponse::Ok()
-            .content_type("application/json")
-            .body(config_data),
+           .content_type("application/json")
+           .body(config_data),
         Err(e) => {
-            eprintln!("❌ Failed to read config_new.json file: {:?}", e);
-            HttpResponse::InternalServerError().body("Failed to read config_new.json file")
+            eprintln!("❌ Failed to read config_new file: {:?}", e);
+            HttpResponse::InternalServerError().body("Failed to read config_new file")
         }
     }
 }
