@@ -1,7 +1,12 @@
 <template>
   <div class="app-container">
     <h1 class="title">QQ AI Quest 参数设置</h1>
-    <!-- 新增下拉选择框 -->
+    <!-- 新增选择模型的下拉框 -->
+    <select v-model="selectedModel" @change="submitModelChange">
+      <option value="deepseek-chat">DeepSeek</option>
+      <option value="doubao-1.5-vision-pro-32k-250115">Doubao</option>
+    </select>
+    <!-- 之前的下拉选择框 -->
     <select v-model="selectedConfig" @change="useSelectedConfig">
       <option value="" disabled>选择配置方案</option>
       <option v-for="configFile in configFiles" :key="configFile" :value="configFile">{{ configFile }}</option>
@@ -48,6 +53,7 @@ import axios from 'axios';
 const parameters = ref({});
 const configFiles = ref([]);
 const selectedConfig = ref('');
+const selectedModel = ref('deepseek-chat'); // 默认选择 DeepSeek
 
 const filteredParameters = computed(() => {
   let keys = Object.keys(parameters.value).filter((key) => {
@@ -96,6 +102,17 @@ const useSelectedConfig = async () => {
       console.error('获取配置文件失败：', error);
       alert('获取配置文件失败，请检查！');
     }
+  }
+};
+
+// 提交选择的模型
+const submitModelChange = async () => {
+  try {
+    await axios.post(`http://localhost:${__HOST_PORT__}/update_model`, { model: selectedModel.value });
+    alert(`已切换到 ${selectedModel.value === 'deepseek-chat' ? 'DeepSeek' : 'Doubao'} 模型！`);
+  } catch (error) {
+    console.error('切换模型失败：', error);
+    alert('切换模型失败，请检查！');
   }
 };
 </script>
