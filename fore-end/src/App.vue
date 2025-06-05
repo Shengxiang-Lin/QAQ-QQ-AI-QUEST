@@ -12,7 +12,7 @@
       <AddQQId />
     </div>
     <div v-else-if="currentPage === 'UsageStats'">
-      <!-- 用量统计内容暂时留空 -->
+      <UsageStats />
     </div>
   </div>
 </template>
@@ -21,7 +21,7 @@
 import { ref } from "vue";
 import ParameterPage from "./components/ParameterPage.vue";
 import AddQQId from "./components/AddQQId.vue";
-
+import UsageStats from "./components/UsageStats.vue";
 const currentPage = ref("ParameterPage");
 </script>
 

@@ -4,6 +4,9 @@ use actix_web::FromRequest;
 use std::fs;
 use std::path::Path;
 use crate::SELECTED_MODEL; 
+use crate::services::DEEPSEEK_REQUEST_COUNT;
+use std::sync::atomic::Ordering; 
+use crate::services::DEEPSEEK_TOKEN_USAGE;
 
 #[post("/")]
 pub async fn show_info(
@@ -125,4 +128,19 @@ pub async fn update_model(payload: web::Json<serde_json::Value>) -> impl Respond
     } else {
         HttpResponse::BadRequest().body("Invalid model name")
     }
+}
+
+#[get("/usage_stats")]
+pub async fn usage_stats() -> impl Responder {
+    let request_count = DEEPSEEK_REQUEST_COUNT.load(Ordering::Relaxed);
+    let token_usage = DEEPSEEK_TOKEN_USAGE.load(Ordering::Relaxed);
+
+    let stats = serde_json::json!({
+        "deepseek_request_count": request_count,
+        "deepseek_token_usage": token_usage
+    });
+
+    HttpResponse::Ok()
+       .content_type("application/json")
+       .body(stats.to_string())
 }
