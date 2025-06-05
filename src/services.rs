@@ -12,7 +12,7 @@ impl ClientManager{
     Self {
         client: Client::new(),
     }
-}
+  }
 
   pub async fn send_api_post(&self, url: &str, payload: &impl serde::Serialize) -> Result<Response, Box<dyn std::error::Error>>{
     let key: &str = match url {
@@ -27,7 +27,12 @@ impl ClientManager{
       .json(&json!(payload))
       .send()
       .await?;
-    let response = res.json::<Response>().await?;
+
+    // 打印原始响应内容
+    let response_text = res.text().await?;
+    println!("Raw API response: {}", response_text);
+
+    let response = serde_json::from_str::<Response>(&response_text)?;
     println!("Response: {:?}", response);
     Ok(response)
   }
@@ -44,6 +49,3 @@ impl ClientManager{
     Ok(())
   }
 }
-
-
-

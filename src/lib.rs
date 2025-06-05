@@ -9,6 +9,9 @@ use chrono::TimeZone;
 use chrono::{Utc,FixedOffset};
 use once_cell::sync::Lazy;
 use once_cell::sync::OnceCell;
+use std::sync::Mutex;
+
+pub static SELECTED_MODEL: Lazy<Mutex<String>> = Lazy::new(|| Mutex::new("deepseek-chat".to_string()));
 
 pub mod ll_one_bot{
   pub mod interface;

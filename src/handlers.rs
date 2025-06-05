@@ -3,6 +3,7 @@ use crate::{ll_one_bot::interface::*, pipeline::handle_message_pipeline, QQ_SEND
 use actix_web::FromRequest;
 use std::fs;
 use std::path::Path;
+use crate::SELECTED_MODEL; 
 
 #[post("/")]
 pub async fn show_info(
@@ -21,12 +22,12 @@ pub async fn show_info(
     // 2. 打印原始请求内容（使用克隆体）
     let body_clone = body.clone();
     let body_str = String::from_utf8_lossy(&body_clone);
-    // println!("📨 Raw request body ({} bytes):\n{}", body_clone.len(), body_str);
+    println!("📨 Raw request body ({} bytes):\n{}", body_clone.len(), body_str);
 
     // 3. 尝试解析
     match web::Json::<LLOneBot>::from_request(&req, &mut body.into()).await {
         Ok(valid_info) => {
-            // println!("✅ Parsed successfully: {:#?}", valid_info);
+            println!("✅ Parsed successfully: {:#?}", valid_info);
             match handle_message_pipeline(valid_info.into_inner()).await {
                 Ok(sendback) => {
                     if let Err(e) = QQ_SENDER.send_qq_post(&sendback).await {
@@ -111,5 +112,17 @@ pub async fn show_new_config(path: web::Path<String>) -> impl Responder {
             eprintln!("❌ Failed to read config_new file: {:?}", e);
             HttpResponse::InternalServerError().body("Failed to read config_new file")
         }
+    }
+}
+
+#[post("/update_model")]
+pub async fn update_model(payload: web::Json<serde_json::Value>) -> impl Responder {
+    if let Some(model) = payload.get("model").and_then(|m| m.as_str()) {
+        // 获取 Mutex 的锁并更新模型
+        let mut selected_model = SELECTED_MODEL.lock().unwrap();
+        *selected_model = model.to_string();
+        HttpResponse::Ok().body("Model updated successfully")
+    } else {
+        HttpResponse::BadRequest().body("Invalid model name")
     }
 }
