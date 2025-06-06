@@ -3,6 +3,8 @@
     <h2>用量统计</h2>
     <p>DeepSeek API 请求数: {{ deepseekRequestCount }}</p>
     <p>DeepSeek 消耗的 Token 数: {{ deepseekTokenUsage }}</p>
+    <p>Doubao API 请求数: {{ doubaoRequestCount }}</p>
+    <p>Doubao 消耗的 Token 数: {{ doubaoTokenUsage }}</p>
   </div>
 </template>
 
@@ -14,12 +16,16 @@ const BASE_URL = `http://localhost:${__HOST_PORT__}`;
 
 const deepseekRequestCount = ref(0);
 const deepseekTokenUsage = ref(0);
+const doubaoRequestCount = ref(0);
+const doubaoTokenUsage = ref(0);
 
 const fetchUsageStats = async () => {
   try {
     const response = await axios.get(`${BASE_URL}/usage_stats`);
     deepseekRequestCount.value = response.data.deepseek_request_count;
     deepseekTokenUsage.value = response.data.deepseek_token_usage;
+    doubaoRequestCount.value = response.data.doubao_request_count;
+    doubaoTokenUsage.value = response.data.doubao_token_usage;
   } catch (error) {
     console.error('获取用量统计信息失败：', error);
   }

@@ -5,10 +5,13 @@ use std::sync::atomic::{AtomicU64, Ordering};
 // 全局变量记录 API 请求数和消耗的 Token 数
 pub static DEEPSEEK_REQUEST_COUNT: AtomicU64 = AtomicU64::new(0);
 pub static DEEPSEEK_TOKEN_USAGE: AtomicU64 = AtomicU64::new(0);
+pub static DOUBAO_REQUEST_COUNT: AtomicU64 = AtomicU64::new(0);
+pub static DOUBAO_TOKEN_USAGE: AtomicU64 = AtomicU64::new(0);
 //同一二进制文件下使用crate，不同二进制文件下使用QAQ，因为都在lib.rs中声明了模块，故用crate
 pub struct ClientManager{
   client: Client,
 }
+
 
 impl ClientManager{
   pub fn new() -> Self {
@@ -33,10 +36,18 @@ impl ClientManager{
 
     let response = res.json::<Response>().await?;
     println!("Response: {:?}", response);
-    // 记录请求数
-    DEEPSEEK_REQUEST_COUNT.fetch_add(1, Ordering::Relaxed);
-    // 记录消耗的 Token 数
-    DEEPSEEK_TOKEN_USAGE.fetch_add(response.usage.total_tokens, Ordering::Relaxed);
+    // 记录请求数和Token使用量
+    match url {
+      config::model_url::DEEPSEEK => {
+        DEEPSEEK_REQUEST_COUNT.fetch_add(1, Ordering::Relaxed);
+        DEEPSEEK_TOKEN_USAGE.fetch_add(response.usage.total_tokens, Ordering::Relaxed);
+      },
+      config::model_url::DOUBAO_VISION => {
+        DOUBAO_REQUEST_COUNT.fetch_add(1, Ordering::Relaxed);
+        DOUBAO_TOKEN_USAGE.fetch_add(response.usage.total_tokens, Ordering::Relaxed);
+      },
+      _ => {}
+    }
     Ok(response)
   }
 

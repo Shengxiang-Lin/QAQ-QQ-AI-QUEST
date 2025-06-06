@@ -5,8 +5,10 @@ use std::fs;
 use std::path::Path;
 use crate::SELECTED_MODEL; 
 use crate::services::DEEPSEEK_REQUEST_COUNT;
-use std::sync::atomic::Ordering; 
 use crate::services::DEEPSEEK_TOKEN_USAGE;
+use crate::services::DOUBAO_REQUEST_COUNT;
+use crate::services::DOUBAO_TOKEN_USAGE;
+use std::sync::atomic::Ordering; 
 
 #[post("/")]
 pub async fn show_info(
@@ -132,12 +134,16 @@ pub async fn update_model(payload: web::Json<serde_json::Value>) -> impl Respond
 
 #[get("/usage_stats")]
 pub async fn usage_stats() -> impl Responder {
-    let request_count = DEEPSEEK_REQUEST_COUNT.load(Ordering::Relaxed);
-    let token_usage = DEEPSEEK_TOKEN_USAGE.load(Ordering::Relaxed);
+    let deepseek_request_count = DEEPSEEK_REQUEST_COUNT.load(Ordering::Relaxed);
+    let deepseek_token_usage = DEEPSEEK_TOKEN_USAGE.load(Ordering::Relaxed);
+    let doubao_request_count = DOUBAO_REQUEST_COUNT.load(Ordering::Relaxed);
+    let doubao_token_usage = DOUBAO_TOKEN_USAGE.load(Ordering::Relaxed);
 
     let stats = serde_json::json!({
-        "deepseek_request_count": request_count,
-        "deepseek_token_usage": token_usage
+        "deepseek_request_count": deepseek_request_count,
+        "deepseek_token_usage": deepseek_token_usage,
+        "doubao_request_count": doubao_request_count,
+        "doubao_token_usage": doubao_token_usage
     });
 
     HttpResponse::Ok()
