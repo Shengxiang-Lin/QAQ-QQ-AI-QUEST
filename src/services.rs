@@ -33,7 +33,6 @@ impl ClientManager{
       .json(&json!(payload))
       .send()
       .await?;
-
     let response = res.json::<Response>().await?;
     println!("Response: {:?}", response);
     // 记录请求数和Token使用量

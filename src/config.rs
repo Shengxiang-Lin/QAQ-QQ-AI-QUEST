@@ -51,6 +51,10 @@ pub fn get_config() -> &'static Config {
   CONFIG.get_or_init(|| Config::load_from_file("./config.json"))
 }
 
+pub fn reload_config() {
+  CONFIG.set(Config::load_from_file("./config.json"));
+}
+
 pub mod default_config{
   pub const PORT: usize = 8080;
   pub const KEY: &str = "sk-1cc4c9defa964d1686545a13a75857f9";

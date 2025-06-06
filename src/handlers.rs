@@ -1,4 +1,5 @@
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder, get};
+use crate::config;
 use crate::{ll_one_bot::interface::*, pipeline::handle_message_pipeline, QQ_SENDER};
 use actix_web::FromRequest;
 use std::fs;
@@ -32,7 +33,7 @@ pub async fn show_info(
     // 3. 尝试解析
     match web::Json::<LLOneBot>::from_request(&req, &mut body.into()).await {
         Ok(valid_info) => {
-            println!("✅ Parsed successfully: {:#?}", valid_info);
+            // println!("✅ Parsed successfully: {:#?}", valid_info);
             match handle_message_pipeline(valid_info.into_inner()).await {
                 Ok(sendback) => {
                     if let Err(e) = QQ_SENDER.send_qq_post(&sendback).await {
@@ -73,12 +74,16 @@ pub async fn show_config() -> impl Responder {
 pub async fn update_config(payload: web::Json<serde_json::Value>) -> impl Responder {
     let new_config = payload.into_inner();
     match fs::write("./config.json", serde_json::to_string_pretty(&new_config).unwrap()) {
-        Ok(_) => HttpResponse::Ok().body("Config updated successfully"),
+        Ok(_) => {
+            config::reload_config();
+            HttpResponse::Ok().body("Config updated successfully")
+        },
         Err(e) => {
             eprintln!("❌ Failed to write config file: {:?}", e);
             HttpResponse::InternalServerError().body("Failed to update config file")
         }
     }
+    
 }
 
 #[get("/config_new_list")]
