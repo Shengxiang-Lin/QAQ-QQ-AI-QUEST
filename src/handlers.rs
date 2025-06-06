@@ -2,6 +2,11 @@ use actix_web::{post, web, HttpRequest, HttpResponse, Responder, get};
 use crate::{ll_one_bot::interface::*, pipeline::handle_message_pipeline, QQ_SENDER};
 use actix_web::FromRequest;
 use std::fs;
+use std::path::Path;
+use crate::SELECTED_MODEL; 
+use crate::services::DEEPSEEK_REQUEST_COUNT;
+use std::sync::atomic::Ordering; 
+use crate::services::DEEPSEEK_TOKEN_USAGE;
 
 #[post("/")]
 pub async fn show_info(
@@ -20,12 +25,12 @@ pub async fn show_info(
     // 2. 打印原始请求内容（使用克隆体）
     let body_clone = body.clone();
     let body_str = String::from_utf8_lossy(&body_clone);
-    // println!("📨 Raw request body ({} bytes):\n{}", body_clone.len(), body_str);
+    println!("📨 Raw request body ({} bytes):\n{}", body_clone.len(), body_str);
 
     // 3. 尝试解析
     match web::Json::<LLOneBot>::from_request(&req, &mut body.into()).await {
         Ok(valid_info) => {
-            // println!("✅ Parsed successfully: {:#?}", valid_info);
+            println!("✅ Parsed successfully: {:#?}", valid_info);
             match handle_message_pipeline(valid_info.into_inner()).await {
                 Ok(sendback) => {
                     if let Err(e) = QQ_SENDER.send_qq_post(&sendback).await {
@@ -72,4 +77,70 @@ pub async fn update_config(payload: web::Json<serde_json::Value>) -> impl Respon
             HttpResponse::InternalServerError().body("Failed to update config file")
         }
     }
+}
+
+#[get("/config_new_list")]
+pub async fn get_config_new_list() -> impl Responder {
+    let config_new_dir = Path::new("./config_new");
+    if let Ok(entries) = fs::read_dir(config_new_dir) {
+        let config_files: Vec<String> = entries
+           .filter_map(|entry| {
+                let entry = entry.ok()?;
+                let path = entry.path();
+                if path.is_file() && path.extension().map(|s| s == "json").unwrap_or(false) {
+                    path.file_name().and_then(|s| s.to_str().map(|s| s.to_string()))
+                } else {
+                    None
+                }
+            })
+           .collect();
+        HttpResponse::Ok()
+           .content_type("application/json")
+           .body(serde_json::to_string(&config_files).unwrap())
+    } else {
+        HttpResponse::InternalServerError().body("Failed to read config_new directory")
+    }
+}
+
+// 获取指定的 config_new 配置文件内容
+#[get("/config_new/{filename}")]
+pub async fn show_new_config(path: web::Path<String>) -> impl Responder {
+    let filename = path.into_inner();
+    let config_path = format!("./config_new/{}", filename);
+    match fs::read_to_string(&config_path) {
+        Ok(config_data) => HttpResponse::Ok()
+           .content_type("application/json")
+           .body(config_data),
+        Err(e) => {
+            eprintln!("❌ Failed to read config_new file: {:?}", e);
+            HttpResponse::InternalServerError().body("Failed to read config_new file")
+        }
+    }
+}
+
+#[post("/update_model")]
+pub async fn update_model(payload: web::Json<serde_json::Value>) -> impl Responder {
+    if let Some(model) = payload.get("model").and_then(|m| m.as_str()) {
+        // 获取 Mutex 的锁并更新模型
+        let mut selected_model = SELECTED_MODEL.lock().unwrap();
+        *selected_model = model.to_string();
+        HttpResponse::Ok().body("Model updated successfully")
+    } else {
+        HttpResponse::BadRequest().body("Invalid model name")
+    }
+}
+
+#[get("/usage_stats")]
+pub async fn usage_stats() -> impl Responder {
+    let request_count = DEEPSEEK_REQUEST_COUNT.load(Ordering::Relaxed);
+    let token_usage = DEEPSEEK_TOKEN_USAGE.load(Ordering::Relaxed);
+
+    let stats = serde_json::json!({
+        "deepseek_request_count": request_count,
+        "deepseek_token_usage": token_usage
+    });
+
+    HttpResponse::Ok()
+       .content_type("application/json")
+       .body(stats.to_string())
 }
