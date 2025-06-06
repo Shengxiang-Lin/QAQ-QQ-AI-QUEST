@@ -3,13 +3,13 @@
     <h2>用量统计</h2>
     <p>DeepSeek API 请求数: {{ deepseekRequestCount }}</p>
     <p>DeepSeek 消耗的 Token 数: {{ deepseekTokenUsage }}</p>
-    <p>Doubao API 请求数: {{ doubaoRequestCount }}</p>
-    <p>Doubao 消耗的 Token 数: {{ doubaoTokenUsage }}</p>
+    <p>豆包 API 请求数: {{ doubaoRequestCount }}</p>
+    <p>豆包 消耗的 Token 数: {{ doubaoTokenUsage }}</p>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import axios from "axios";
 
 const BASE_URL = `http://localhost:${__HOST_PORT__}`;
@@ -31,8 +31,18 @@ const fetchUsageStats = async () => {
   }
 };
 
+let intervalId;
+
 onMounted(() => {
+  // 初始加载数据
   fetchUsageStats();
+  // 每 5 秒（5000 毫秒）更新一次数据
+  intervalId = setInterval(fetchUsageStats, 5000);
+});
+
+onUnmounted(() => {
+  // 组件卸载时清除定时器
+  clearInterval(intervalId);
 });
 </script>
 
