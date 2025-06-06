@@ -20,7 +20,7 @@ pub mod ll_one_bot{
 pub mod llm_api{
   pub mod interface{
     use serde::{Serialize, Deserialize};
-    use crate::config::{get_config,default_config};
+    use crate::config::{self, default_config, get_config};
 
 
     pub trait LLM{
@@ -123,6 +123,19 @@ pub mod llm_api{
         self.messages.push(Message::new_text(ROLE::System,format!("你的QQ号是:{},请观察用户是否@你的QQ",self_id) ));
       }
       
+      pub fn replace_by_integrate_prompt(&mut self){
+        // 替换掉系统消息
+        let prompt = config::default_config::INTEGRATE_PROMPT.to_string();
+        if let Some(first) = self.messages.first_mut() {
+          if first.role == ROLE::System {
+            first.content = MessageContent::PlainText(prompt);
+          }
+        } else {
+          // 如果没有系统消息，则添加一个
+          self.messages.insert(0, Message::new_text(ROLE::System, prompt));
+        }
+      }
+
       pub fn handle_special_input(&mut self){
         // for message in self.messages.iter(){
         //   if let MessageContent::PlainText(text) = &message.content {
@@ -143,7 +156,7 @@ pub mod llm_api{
     #[derive(Serialize,Deserialize,Debug)]
     pub struct Response{
       choices: Vec<Choice>,
-      created: u64,
+      pub created: u64,
       id: String,
       model: String,
       object: String,

@@ -22,6 +22,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // QQ_SENDER.send_qq_post(&payload).await?;
     initialize_database_manager().await;
     let db = DATABASE_MANAGER.get().unwrap();
+    // db.generate_test_data().await?;
     db.reset_all_table().await?;
+    //db.integrate_context(987654321,Some(123456789)).await?;
     Ok(())
 }

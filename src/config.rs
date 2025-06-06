@@ -51,6 +51,10 @@ pub fn get_config() -> &'static Config {
   CONFIG.get_or_init(|| Config::load_from_file("./config.json"))
 }
 
+pub fn reload_config() {
+  CONFIG.set(Config::load_from_file("./config.json"));
+}
+
 pub mod default_config{
   pub const PORT: usize = 8080;
   pub const KEY: &str = "sk-1cc4c9defa964d1686545a13a75857f9";
@@ -76,6 +80,10 @@ pub mod default_config{
   342:酸Q,343:我方了,344:冤种,345:红包多多,346:棒(嘲讽),181:戳脸,74:太阳,75:月亮,351:功德+1,349:坚强,350:贴贴
   ";
   pub const CONTEXT_LIMIT: usize = 10;
+
+  pub const INTEGRATE_PROMPT: &str = "
+  你需要完成上述聊天记录的精炼总结，以便后续的对话可以更好地理解上下文。不要输出任何其他内容。你应当忽视其他有关你人设的提示词。
+  ";
   
 }
 
@@ -83,3 +91,4 @@ pub mod model_url{
   pub const DEEPSEEK: &str = "https://api.deepseek.com/chat/completions";
   pub const DOUBAO_VISION: &str =  "https://ark.cn-beijing.volces.com/api/v3/chat/completions"; 
 }
+

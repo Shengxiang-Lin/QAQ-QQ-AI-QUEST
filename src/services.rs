@@ -20,7 +20,7 @@ impl ClientManager{
     }
   }
 
-  pub async fn send_api_post(&self, url: &str, payload: &impl serde::Serialize) -> Result<Response, Box<dyn std::error::Error>>{
+  pub async fn send_api_post(&self, url: &str, payload: &impl serde::Serialize) -> Result<Response, Box<dyn std::error::Error + Send + Sync>>{
     let key: &str = match url {
       config::model_url::DEEPSEEK => &config::get_config().deepseek_key.as_str(),
       config::model_url::DOUBAO_VISION => config::get_config().doubao_key.as_str(),
@@ -33,7 +33,6 @@ impl ClientManager{
       .json(&json!(payload))
       .send()
       .await?;
-
     let response = res.json::<Response>().await?;
     println!("Response: {:?}", response);
     // 记录请求数和Token使用量

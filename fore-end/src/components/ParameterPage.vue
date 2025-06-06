@@ -9,7 +9,13 @@
     <!-- 之前的下拉选择框 -->
     <select v-model="selectedConfig" @change="useSelectedConfig">
       <option value="" disabled>选择配置方案</option>
-      <option v-for="configFile in configFiles" :key="configFile" :value="configFile">{{ configFile }}</option>
+      <option
+        v-for="configFile in configFiles"
+        :key="configFile"
+        :value="configFile"
+      >
+        {{ configFile }}
+      </option>
     </select>
     <div class="parameters-container">
       <div
@@ -48,12 +54,12 @@
 import { getAllParameters, updateJS } from "@/utils.js";
 import Parameter from "@/components/Parameter.vue";
 import { ref, onMounted, computed } from "vue";
-import axios from 'axios';
+import axios from "axios";
 
 const parameters = ref({});
 const configFiles = ref([]);
-const selectedConfig = ref('');
-const selectedModel = ref('deepseek-chat'); // 默认选择 DeepSeek
+const selectedConfig = ref("");
+const selectedModel = ref("deepseek-chat"); // 默认选择 DeepSeek
 
 const filteredParameters = computed(() => {
   let keys = Object.keys(parameters.value).filter((key) => {
@@ -70,11 +76,13 @@ onMounted(async () => {
   console.log("parameters", parameters.value);
   // 获取 config_new 文件夹下的所有配置文件列表
   try {
-    const response = await axios.get(`http://localhost:${__HOST_PORT__}/config_new_list`);
+    const response = await axios.get(
+      `http://localhost:${__HOST_PORT__}/config_new_list`
+    );
     configFiles.value = response.data;
   } catch (error) {
-    console.error('获取配置文件列表失败：', error);
-    alert('获取配置文件列表失败，请检查！');
+    console.error("获取配置文件列表失败：", error);
+    alert("获取配置文件列表失败，请检查！");
   }
 });
 
@@ -89,7 +97,9 @@ const useSelectedConfig = async () => {
   if (selectedConfig.value) {
     try {
       // 获取选中的配置文件内容
-      const response = await axios.get(`http://localhost:${__HOST_PORT__}/config_new/${selectedConfig.value}`);
+      const response = await axios.get(
+        `http://localhost:${__HOST_PORT__}/config_new/${selectedConfig.value}`
+      );
       const newConfig = response.data;
 
       // 更新网页上的参数
@@ -99,8 +109,8 @@ const useSelectedConfig = async () => {
       await updateJS(newConfig);
       alert(`已使用 ${selectedConfig.value} 的配置！`);
     } catch (error) {
-      console.error('获取配置文件失败：', error);
-      alert('获取配置文件失败，请检查！');
+      console.error("获取配置文件失败：", error);
+      alert("获取配置文件失败，请检查！");
     }
   }
 };
@@ -108,11 +118,17 @@ const useSelectedConfig = async () => {
 // 提交选择的模型
 const submitModelChange = async () => {
   try {
-    await axios.post(`http://localhost:${__HOST_PORT__}/update_model`, { model: selectedModel.value });
-    alert(`已切换到 ${selectedModel.value === 'deepseek-chat' ? 'DeepSeek' : 'Doubao'} 模型！`);
+    await axios.post(`http://localhost:${__HOST_PORT__}/update_model`, {
+      model: selectedModel.value,
+    });
+    alert(
+      `已切换到 ${
+        selectedModel.value === "deepseek-chat" ? "DeepSeek" : "Doubao"
+      } 模型！`
+    );
   } catch (error) {
-    console.error('切换模型失败：', error);
-    alert('切换模型失败，请检查！');
+    console.error("切换模型失败：", error);
+    alert("切换模型失败，请检查！");
   }
 };
 </script>
