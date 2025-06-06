@@ -25,6 +25,7 @@ pub async fn handle_message_pipeline(message: LLOneBot) -> Result<SendBack, Http
 }
 
 
+
 fn validate_message(message: &LLOneBot) -> Result<(), HttpResponse> {
   //验证消息、用户信息等
   let qqids:&Vec<u64> = &get_config().valid_qq;

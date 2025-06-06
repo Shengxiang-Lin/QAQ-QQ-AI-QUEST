@@ -3,7 +3,7 @@
     "description": "上下文限制的最大条数",
     "range": [1, 100],
     "type": "int",
-    "value": 8
+    "value": 6
   },
   "deepseek_key": {
     "description": "DeepSeek 服务的 API 密钥",
