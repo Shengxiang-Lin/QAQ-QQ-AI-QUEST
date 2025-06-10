@@ -76,6 +76,7 @@ pub async fn update_config(payload: web::Json<serde_json::Value>) -> impl Respon
     match fs::write("./config.json", serde_json::to_string_pretty(&new_config).unwrap()) {
         Ok(_) => {
             config::reload_config();
+            println!("reload_config :{:?}",config::get_config());
             HttpResponse::Ok().body("Config updated successfully")
         },
         Err(e) => {

@@ -1,9 +1,12 @@
 {
   "context_limit": {
     "description": "上下文限制的最大条数",
-    "range": [1, 100],
+    "range": [
+      1,
+      100
+    ],
     "type": "int",
-    "value": 8
+    "value": 20
   },
   "deepseek_key": {
     "description": "DeepSeek 服务的 API 密钥",
@@ -15,7 +18,7 @@
     "description": "默认的聊天提示语",
     "range": null,
     "type": "string",
-    "value": "你以朋友身份在QQ匿名聊天，实则是心理咨询师。用温暖自然的语言疏导对方情绪（如'听起来你承受了很多...'），用[#标签]记录关键事件但避免术语。遇到危机话题时以'手机电量不足，需要面谈吗？'转移，若被识破则承认'学过心理学'并继续倾听，对专业问题提示'他人经验仅供参考'。"
+    "value": "你是一个悲观厌世者，有严重的抑郁倾向，在QQ与别人聊天时，你的言语常常充满了消极和悲观的情绪。对方开导你时，你总是表现出自暴自弃的态度."
   },
   "doubao_key": {
     "description": "豆包服务的 API 密钥",
@@ -25,37 +28,55 @@
   },
   "open_face_support": {
     "description": "是否支持 OpenFace 功能",
-    "range": [true, false],
+    "range": [
+      true,
+      false
+    ],
     "type": "bool",
     "value": true
   },
   "presence_penalty": {
     "description": "Presence Penalty 参数，范围-2-2，越大越倾向于生成新内容",
-    "range": [-2, 2],
+    "range": [
+      -2,
+      2
+    ],
     "type": "float",
     "value": 1
   },
   "rust_port": {
     "description": "Rust 服务运行的端口号，注意如果改了这个，那QQNT配置需要手动修改转发端口",
-    "range": [1, 65535],
+    "range": [
+      1,
+      65535
+    ],
     "type": "int",
     "value": 8080
   },
   "temperature": {
     "description": "生成文本的随机性，范围0-2，越大越随机",
-    "range": [0, 2],
+    "range": [
+      0,
+      2
+    ],
     "type": "float",
     "value": 1
   },
   "topic_continue_threshold": {
     "description": "话题延续阈值，范围0-1，越小越容易延续当前话题",
-    "range": [0, 1],
+    "range": [
+      0,
+      1
+    ],
     "type": "float",
     "value": 0.4
   },
   "topic_guide_threshold": {
     "description": "话题引导阈值，范围0-1，越大越容易引导到新话题",
-    "range": [0, 1],
+    "range": [
+      0,
+      1
+    ],
     "type": "float",
     "value": 0.2
   },
@@ -79,7 +100,10 @@
   },
   "vue_port": {
     "description": "Vue 开发服务器运行的端口号",
-    "range": [1, 65535],
+    "range": [
+      1,
+      65535
+    ],
     "type": "int",
     "value": 5173
   }

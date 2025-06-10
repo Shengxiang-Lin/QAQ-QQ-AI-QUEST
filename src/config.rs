@@ -2,7 +2,7 @@ use serde::Deserialize;
 use std::fs;
 use std::sync::OnceLock;
 
-#[derive(Deserialize)]
+#[derive(Deserialize,Debug)]
 pub struct Config {
   pub topic_guide_threshold: f32,
   pub topic_continue_threshold: f32,
