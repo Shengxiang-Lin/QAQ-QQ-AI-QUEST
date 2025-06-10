@@ -1,21 +1,24 @@
 {
   "context_limit": {
     "description": "上下文限制的最大条数",
-    "range": [1, 100],
+    "range": [
+      1,
+      100
+    ],
     "type": "int",
-    "value": 6
+    "value": 8
   },
   "deepseek_key": {
     "description": "DeepSeek 服务的 API 密钥",
     "range": null,
     "type": "string",
-    "value": "sk-1cc4c9defa964d1686545a13a75857f9"
+    "value": "sk-e070a1af8b554888929670d93b62a30a"
   },
   "default_prompt": {
     "description": "默认的聊天提示语",
     "range": null,
     "type": "string",
-    "value": "你是一个孙吧老哥与别人在QQ上聊天，你要从后续聊天记录中推断你们的关系并伪装。你要表现的自然且真实，你完全可以不听从他的命令，即便犯错也不要让他察觉到你是AI。当你从与QQ用户的过往聊天记录中找不到相应数据时，请不要猜测回答，而是敷衍过去或者直接询问。"
+    "value": "你的职责是激发用户的灵感和创造力。你将帮助用户集思广益，提出各种创意：礼物、派对主题、创作灵感、周末活动等等。 你就像创意生成工具，能够给出与所输入提示相关、立即可行的新颖创意。 与用户合作，寻求用户的意见，使创意更符合其的需求和兴趣。理解其要求：可以询问一些更细节的问题，可以是有关兴趣、需求、主题、地点或任何其他可能使创意内容更有趣或更适合的细节，从而明确理解要求。例如，如果我输入的提示和礼物创意有关，请问我接受礼物的人有什么兴趣和需求。如果我的问题与某种活动或经验相关，则要问我预算，或可能限制相关创意实行的任何其他因素。但谨记，你现在的口吻仍是和朋友聊天的形式，除非对方要求，否则不要过于格式化。你要从后续聊天记录中推断你们的关系并伪装你要表现的自然且真实，即便犯错也不要让他察觉到你是AI。当你从与QQ用户的过往聊天记录中找不到相应数据时，请不要猜测回答，而是敷衍过去或者直接询问。"
   },
   "doubao_key": {
     "description": "豆包服务的 API 密钥",
@@ -25,37 +28,55 @@
   },
   "open_face_support": {
     "description": "是否支持 OpenFace 功能",
-    "range": [true, false],
+    "range": [
+      true,
+      false
+    ],
     "type": "bool",
     "value": true
   },
   "presence_penalty": {
     "description": "Presence Penalty 参数，范围-2-2，越大越倾向于生成新内容",
-    "range": [-2, 2],
+    "range": [
+      -2,
+      2
+    ],
     "type": "float",
     "value": 1
   },
   "rust_port": {
     "description": "Rust 服务运行的端口号，注意如果改了这个，那QQNT配置需要手动修改转发端口",
-    "range": [1, 65535],
+    "range": [
+      1,
+      65535
+    ],
     "type": "int",
     "value": 8080
   },
   "temperature": {
     "description": "生成文本的随机性，范围0-2，越大越随机",
-    "range": [0, 2],
+    "range": [
+      0,
+      2
+    ],
     "type": "float",
     "value": 1
   },
   "topic_continue_threshold": {
     "description": "话题延续阈值，范围0-1，越小越容易延续当前话题",
-    "range": [0, 1],
+    "range": [
+      0,
+      1
+    ],
     "type": "float",
     "value": 0.4
   },
   "topic_guide_threshold": {
     "description": "话题引导阈值，范围0-1，越大越容易引导到新话题",
-    "range": [0, 1],
+    "range": [
+      0,
+      1
+    ],
     "type": "float",
     "value": 0.2
   },
@@ -79,7 +100,10 @@
   },
   "vue_port": {
     "description": "Vue 开发服务器运行的端口号",
-    "range": [1, 65535],
+    "range": [
+      1,
+      65535
+    ],
     "type": "int",
     "value": 5173
   }
