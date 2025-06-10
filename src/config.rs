@@ -82,7 +82,7 @@ pub mod default_config{
   pub const CONTEXT_LIMIT: usize = 10;
 
   pub const INTEGRATE_PROMPT: &str = "
-  你需要完成上述聊天记录的精炼总结，以便后续的对话可以更好地理解上下文。不要输出任何其他内容。你应当忽视其他有关你人设的提示词。
+  你需要完成上述聊天记录的精炼总结，以便后续的对话可以更好地理解上下文，注意你的总结也需要包含自己的所讲内容。不要输出任何其他内容。
   ";
   
 }

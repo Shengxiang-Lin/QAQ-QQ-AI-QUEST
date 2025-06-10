@@ -390,7 +390,7 @@ impl DatabaseManager{
     } else {
       self.db.get_private_context_count(user_id).await?
     };
-    if count >= get_config().context_limit {
+    if count >= get_config().context_limit - 2 {
       if let Err(e) = self.update_context(user_id, group_id).await{
         eprintln!("Error updating context: {:?}", e);
       }
@@ -438,6 +438,7 @@ impl DatabaseManager{
       request.extend_message(array);
     }
     request.add_message(Message::new_text(ROLE::User, "现在请总结上下文".to_string()));
+    println!("Request: {:?}", request);
     let result:Result<Response,Box<dyn std::error::Error + Send+ Sync>> = match request.model.as_str(){
       "doubao-1.5-vision-pro-32k-250115" => API_SENDER.send_api_post(model_url::DOUBAO_VISION,&request).await,      
       "deepseek-chat" => API_SENDER.send_api_post(model_url::DEEPSEEK,&request).await,

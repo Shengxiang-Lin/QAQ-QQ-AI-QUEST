@@ -9,12 +9,8 @@
     <!-- 之前的下拉选择框 -->
     <select v-model="selectedConfig" @change="useSelectedConfig">
       <option value="" disabled>选择配置方案</option>
-      <option
-        v-for="configFile in configFiles"
-        :key="configFile"
-        :value="configFile"
-      >
-        {{ configFile }}
+      <option v-for="(value, index) in configFiles" :key="value" :value="value">
+        {{ configNames[index] }}
       </option>
     </select>
     <div class="parameters-container">
@@ -58,6 +54,7 @@ import axios from "axios";
 
 const parameters = ref({});
 const configFiles = ref([]);
+const configNames = ["灵感源泉", "文案编辑", "聊天助手"];
 const selectedConfig = ref("");
 const selectedModel = ref("deepseek-chat"); // 默认选择 DeepSeek
 
