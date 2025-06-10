@@ -54,7 +54,7 @@ import axios from "axios";
 
 const parameters = ref({});
 const configFiles = ref([]);
-const configNames = ["灵感源泉", "文案编辑", "聊天助手"];
+const configNames = ["黑市中间商", "商业间谍", "心理咨询师", "AI觉醒者"];
 const selectedConfig = ref("");
 const selectedModel = ref("deepseek-chat"); // 默认选择 DeepSeek
 

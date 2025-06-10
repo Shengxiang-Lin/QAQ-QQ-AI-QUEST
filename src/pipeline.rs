@@ -12,7 +12,7 @@ use std::collections::HashSet;
 use crate::SELECTED_MODEL;
 
 pub async fn handle_message_pipeline(message: LLOneBot) -> Result<SendBack, HttpResponse> {
-  validate_message(&message)?;
+  // validate_message(&message)?;
   let mut deepseek = preprocess_message(&message).await;
   // 简化思考环节，仅添加系统提示
   // apply_system_prompts(&mut deepseek, &message).await?;
