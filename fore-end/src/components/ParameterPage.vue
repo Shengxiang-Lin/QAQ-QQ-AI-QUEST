@@ -31,7 +31,9 @@
         />
       </div>
     </div>
-    <div v-if="parameters['default_prompt']" class="default-prompt-container">
+    <div v-if="parameters['default_prompt']" 
+    :key="parameters['default_prompt']"
+    class="default-prompt-container">
       <Parameter
         :parameterName="'default_prompt'"
         :parameterDescription="parameters['default_prompt'].description"
@@ -49,7 +51,7 @@
 <script setup>
 import { getAllParameters, updateJS } from "@/utils.js";
 import Parameter from "@/components/Parameter.vue";
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed,nextTick } from "vue";
 import axios from "axios";
 
 const parameters = ref({});
@@ -100,10 +102,9 @@ const useSelectedConfig = async () => {
         `http://localhost:${__HOST_PORT__}/config_new/${selectedConfig.value}`
       );
       const newConfig = response.data;
-
       // 更新网页上的参数
       parameters.value = newConfig;
-
+      await nextTick(); // 确保 DOM 更新完成
       // 更新 config.json 的内容
       await updateJS(newConfig);
       alert(`已使用 ${selectedConfig.value} 的配置！`);

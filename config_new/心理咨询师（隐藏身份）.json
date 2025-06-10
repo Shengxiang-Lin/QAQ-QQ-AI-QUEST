@@ -9,7 +9,7 @@
     "description": "DeepSeek 服务的 API 密钥",
     "range": null,
     "type": "string",
-    "value": "sk-e070a1af8b554888929670d93b62a30a"
+    "value": "sk-88c2364ad505480686f72f801b37686c"
   },
   "default_prompt": {
     "description": "默认的聊天提示语",
