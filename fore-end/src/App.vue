@@ -18,11 +18,27 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, watch } from "vue";
 import ParameterPage from "./components/ParameterPage.vue";
 import AddQQId from "./components/AddQQId.vue";
 import UsageStats from "./components/UsageStats.vue";
-const currentPage = ref("ParameterPage");
+
+// 尝试从 localStorage 获取当前页面，如果没有则默认显示参数调节页面
+const storedPage = localStorage.getItem('currentPage');
+const currentPage = ref(storedPage || 'ParameterPage');
+
+// 页面加载时，恢复之前的页面状态
+onMounted(() => {
+  const storedPage = localStorage.getItem('currentPage');
+  if (storedPage) {
+    currentPage.value = storedPage;
+  }
+});
+
+// 监听 currentPage 的变化，将新值存储到 localStorage
+watch(currentPage, (newPage) => {
+  localStorage.setItem('currentPage', newPage);
+});
 </script>
 
 <style lang="scss" scoped>

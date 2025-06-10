@@ -96,6 +96,9 @@ const submitChange = async (name, UpdateParameter) => {
 const useSelectedConfig = async () => {
   if (selectedConfig.value) {
     try {
+      // 存储选中的配置文件
+      localStorage.setItem('selectedConfig', selectedConfig.value);
+
       // 获取选中的配置文件内容
       const response = await axios.get(
         `http://localhost:${__HOST_PORT__}/config_new/${selectedConfig.value}`
