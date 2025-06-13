@@ -9,6 +9,15 @@ _目前仍在开发中_
 #### 使用说明
 
 请自行下载 [LLOneBot](https://github.com/LLOneBot/LLOneBot) 搭载的 QQNT，同时设置消息转发端口 8080(默认)
+<table align="center">
+  <tr>
+    <td align="center"> 
+      <img src="doc/FC5{N$``HO]R57GUWLX8D8G.png" alt="Framework" style="width: 700px;"/> 
+      <br>
+    </td>
+  </tr>
+</table>
+ 
 请自行配置大模型的 API KEY
 如果未安装 npm 请上网搜索并安装 Node.js
 
