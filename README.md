@@ -13,7 +13,7 @@ _目前仍在开发中_
 ![](doc/P[JH8Y$[ZNQQ1F1W8TGAER.png)     
 ![](doc/FC5{N$``HO]R57GUWLX8D8G.png)    
  
-请自行配置大模型的 API KEY
+请自行配置大模型的 API KEY [Deepseek API KEY](https://platform.deepseek.com/api_keys) [Doubao API KEY](https://www.volcengine.com/product/ark)     
 如果未安装 npm 请上网搜索并安装 Node.js
 
 - windows: 运行 start.bat
