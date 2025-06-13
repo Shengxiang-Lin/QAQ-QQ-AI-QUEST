@@ -14,7 +14,7 @@ _目前仍在开发中_
 ![](doc/FC5{N$``HO]R57GUWLX8D8G.png)    
  
 请自行配置大模型的 API KEY [Deepseek API KEY](https://platform.deepseek.com/api_keys) [Doubao API KEY](https://www.volcengine.com/product/ark)   
-本地配置Rust运行环境 [参考](https://blog.csdn.net/qq_45325459/article/details/138031515)
+本地配置Rust运行环境 [参考](https://blog.csdn.net/qq_45325459/article/details/138031515)      
 如果未安装 npm 请上网搜索并安装 Node.js  
 
 - windows: 运行 start.bat
