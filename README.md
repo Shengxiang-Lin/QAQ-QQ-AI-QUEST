@@ -12,7 +12,7 @@ _目前仍在开发中_
 <table align="center">
   <tr>
     <td align="center"> 
-      <img src="doc/FC5{N$``HO]R57GUWLX8D8G.png" alt="Framework" style="width: 700px;"/> 
+      <img src="doc/FC5{N$``HO]R57GUWLX8D8G.jpg" alt="Framework" style="width: 700px;"/> 
       <br>
     </td>
   </tr>
