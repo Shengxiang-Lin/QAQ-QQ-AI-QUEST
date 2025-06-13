@@ -20,4 +20,8 @@ _完成开发_
 - windows: 运行 start.bat
 - linux: 运行 start.sh
 
-请注意需要自己打开前端窗口 localhost:5173(默认)修改参数，当然也可以直接修改[config.json](config.json)
+请注意需要自己打开前端窗口 localhost:5173(默认)修改参数，当然也可以直接修改[config.json](config.json)     
+       
+### Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=reallinshengxiang/QAQ-QQ-AI-QUEST&type=Date)](https://www.star-history.com/#reallinshengxiang/QAQ-QQ-AI-QUEST&Date)
