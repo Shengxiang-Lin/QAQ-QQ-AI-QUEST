@@ -13,16 +13,16 @@ _完成开发_
 ![](doc/P[JH8Y$[ZNQQ1F1W8TGAER.png)     
 ![](doc/FC5{N$``HO]R57GUWLX8D8G.png)    
  
-请自行配置大模型的 API KEY [Deepseek API KEY](https://platform.deepseek.com/api_keys) [Doubao API KEY](https://www.volcengine.com/product/ark)   
+请自行配置大模型的 API KEY [Deepseek](https://platform.deepseek.com/api_keys) [Doubao](https://www.volcengine.com/product/ark)   
 本地配置Rust运行环境 [参考](https://blog.csdn.net/qq_45325459/article/details/138031515)      
 如果未安装 npm 请上网搜索并安装 Node.js  
 
 - windows: 运行 start.bat
 - linux: 运行 start.sh
 
-请注意需要自己打开前端窗口 localhost:5173(默认)修改参数，当然也可以直接修改[config.json](config.json)     
+请注意需要打开前端窗口 localhost:5173(默认)修改参数，当然也可以直接修改[config.json](config.json)     
        
-### Star History
+### Star History   
 
 <a href="https://www.star-history.com/#reallinshengxiang/QAQ-QQ-AI-QUEST&Date">
  <picture>
