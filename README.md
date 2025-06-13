@@ -10,7 +10,7 @@ _目前仍在开发中_
 
 请自行下载 [LLOneBot](https://github.com/LLOneBot/LLOneBot) 搭载的 QQNT，同时设置消息转发端口 8080(默认)
 ![](doc/J9BRE%~A%PH88A25_C{7OBD.png)
-![](doc/P[JH8Y$[ZNQQ1)F1W8TGAER.png)
+![](doc/P[JH8Y$[ZNQQ1F1W8TGAER.png)
 ![](doc/FC5{N$``HO]R57GUWLX8D8G.png)
  
 请自行配置大模型的 API KEY
