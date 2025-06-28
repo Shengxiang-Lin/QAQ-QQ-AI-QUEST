@@ -24,10 +24,10 @@ _完成开发_
        
 ### Star History   
 
-<a href="https://www.star-history.com/#reallinshengxiang/QAQ-QQ-AI-QUEST&Date">
+<a href="https://www.star-history.com/#Shengxiang-Lin/QAQ-QQ-AI-QUEST&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=reallinshengxiang/QAQ-QQ-AI-QUEST&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=reallinshengxiang/QAQ-QQ-AI-QUEST&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=reallinshengxiang/QAQ-QQ-AI-QUEST&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Shengxiang-Lin/QAQ-QQ-AI-QUEST&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Shengxiang-Lin/QAQ-QQ-AI-QUEST&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Shengxiang-Lin/QAQ-QQ-AI-QUEST&type=Date" />
  </picture>
 </a>
