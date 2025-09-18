@@ -26,6 +26,7 @@ _完成开发_
 ### Star History   
 
 [![Stargazers over time](https://starchart.cc/Shengxiang-Lin/QAQ-QQ-AI-QUEST.svg?variant=adaptive)](https://starchart.cc/Shengxiang-Lin/QAQ-QQ-AI-QUEST)
+<!-- 
 <a href="https://www.star-history.com/#Shengxiang-Lin/QAQ-QQ-AI-QUEST&Date">
  <picture>
    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Shengxiang-Lin/QAQ-QQ-AI-QUEST&type=Date&theme=dark" />
