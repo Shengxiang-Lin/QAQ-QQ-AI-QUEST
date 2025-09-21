@@ -1,6 +1,7 @@
 <h1 align="center">
 QAQ: QQ-AI-Quest   
-</h1>
+</h1>   
+[![OSS Compass Analyze](https://oss-compass.org/badge/stcr18w6.svg)](https://oss-compass.org/analyze/stcr18w6)
 本项目用 Rust 语言开发一个智能聊天机器人系统，搭建一安全稳定的服务器存储用户信息和聊天记录，设计 Restful API 路由，集成大模型 API，实现与大模型的交互逻辑，利用 LLOneBot 与后端服务对接，为用户提供智能化的聊天体验。
 
 _完成开发_
