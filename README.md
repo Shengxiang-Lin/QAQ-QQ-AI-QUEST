@@ -99,6 +99,23 @@ QAQ-QQ-AI-QUEST/
 | `temperature` | float | 回复随机性（0~2） |
 | `rust_port` | int | 服务运行端口 |
 
+## 配置参数说明
+
+| 参数               | 类型   | 说明                                  |
+|--------------------|--------|---------------------------------------|
+| `context_limit`    | int    | 上下文最大条数限制                    |
+| `deepseek_key`     | string | Deepseek API 密钥                     |
+| `doubao_key`       | string | Doubao API 密钥                       |
+| `default_prompt`   | string | 聊天默认提示词                        |
+| `presence_penalty` | float  | 话题转移倾向（-2~2）                  |
+| `temperature`      | float  | 回复随机性（0~2）                     |
+| `rust_port`        | int    | 服务运行端口                          |
+| `open_face_support`| bool   | 是否支持 OpenFace 功能                |
+| `topic_continue_threshold` | float | 话题延续阈值（0~1，越小越易延续当前话题） |
+| `topic_guide_threshold` | float | 话题引导阈值（0~1，越大越易引导新话题） |
+| `valid_QQid`       | array  | 需要回复的QQ号列表                    |
+| `vue_port`         | int    | Vue 开发服务器运行端口                |
+
 ## 统计信息
 
 ### API 使用统计
