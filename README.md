@@ -77,27 +77,19 @@ QAQ-QQ-AI-QUEST/
 - **Windows**：运行 `start.bat`（自动创建数据库文件并启动服务）
 - **Linux**：运行 `start.sh`
 
-## 接口说明
-| 路径 | 方法 | 功能 |
-|------|------|------|
-| `/` | POST | 接收 LLOneBot 消息并处理 |
-| `/config` | GET | 获取当前配置 |
-| `/update_config` | POST | 更新配置文件 |
-| `/config_new_list` | GET | 获取配置模板列表 |
-| `/config_new/{filename}` | GET | 获取指定配置模板 |
-| `/update_model` | POST | 切换 AI 模型 |
-| `/usage_stats` | GET | 获取 API 使用统计 |
 
-## 配置参数说明
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `context_limit` | int | 上下文最大条数限制 |
-| `deepseek_key` | string | Deepseek API 密钥 |
-| `doubao_key` | string | Doubao API 密钥 |
-| `default_prompt` | string | 聊天默认提示词 |
-| `presence_penalty` | float | 话题转移倾向（-2~2） |
-| `temperature` | float | 回复随机性（0~2） |
-| `rust_port` | int | 服务运行端口 |
+## 接口说明
+
+| 路径                 | 方法   | 功能描述                                                                 | 请求参数                                                                 | 响应格式                                                                 |
+|----------------------|--------|--------------------------------------------------------------------------|--------------------------------------------------------------------------|--------------------------------------------------------------------------|
+| `/`                  | POST   | 接收 LLOneBot 转发的QQ消息（私聊/群聊），触发消息处理流水线               | Body：LLOneBot协议JSON格式（包含消息类型、发送者ID、内容等）             | 200 OK 响应体：`"Success"`（处理成功）；其他状态码返回错误信息          |
+| `/config`            | GET    | 获取当前系统配置（包含API密钥、模型参数、端口等）                         | 无                                                                      | 200 OK 响应体：`config.json`的完整JSON数据                              |
+| `/update_config`     | POST   | 更新系统配置（修改后即时生效）                                           | Body：待更新的配置JSON（需包含完整配置结构或部分字段）                   | 200 OK 响应体：`"Config updated successfully"`；失败返回错误信息        |
+| `/config_new_list`   | GET    | 获取`config_new`目录下所有配置模板文件名（用于快速切换配置）              | 无                                                                      | 200 OK 响应体：配置文件名数组（如`["网络魔怔人.json", "默认配置.json"]`）|
+| `/config_new/{filename}` | GET | 获取指定配置模板的内容                                                   | 路径参数：`filename`（配置模板文件名，如`网络魔怔人.json`）              | 200 OK 响应体：该模板的完整JSON配置；文件不存在返回500错误              |
+| `/update_model`      | POST   | 切换当前使用的AI模型（支持`deepseek-chat`和`doubao-1.5-vision-pro-32k-250115`） | Body：`{"model": "模型名称"}`                                           | 200 OK 响应体：`"Model updated successfully"`；模型无效返回400错误      |
+| `/usage_stats`       | GET    | 获取各AI模型的调用统计（请求次数、Token消耗）                             | 无                                                                      | 200 OK 响应体：`{"deepseek_request_count": 10, "doubao_token_usage": 512, ...}` |
+
 
 ## 配置参数说明
 
