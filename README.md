@@ -67,7 +67,10 @@ QAQ-QQ-AI-QUEST/
    - 配置到 `config.json` 或通过前端页面（`localhost:5173`）设置
 
 2. **LLOneBot 配置**
-   - 设置消息转发端口为 8080（默认）
+   - 设置消息转发端口为 8080（默认）    
+   ![](doc/J9BREAH88A257OBD.png)      
+   ![](doc/P[JH8Y$[ZNQQ1F1W8TGAER.png)     
+   ![](doc/FC5{N$``HO]R57GUWLX8D8G.png)  
    - 按照文档配置 QQ 机器人账号
 
 ### 启动步骤
@@ -100,5 +103,4 @@ QAQ-QQ-AI-QUEST/
 
 ### API 使用统计
 系统会记录各模型的调用次数与 Token 消耗，可通过 `/usage_stats` 接口查询实时数据。
-```
 
